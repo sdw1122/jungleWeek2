@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>식물 키우기 웹 와이어프레임 (수정본)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f8fafc; }
+        
+        .floating { animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        
+        .chat-scroll::-webkit-scrollbar { width: 6px; }
+        .chat-scroll::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .chat-scroll::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; }
+
+        /* Emoji color filters for sad state */
+        .sad-filter { filter: grayscale(0.7) hue-rotate(-30deg); opacity: 0.8; }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden">
+
+    <!-- Left Panel: Status Window (상태창) -->
+    <aside class="w-80 bg-white border-r shadow-sm p-6 flex flex-col z-10 overflow-y-auto">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6 tracking-tight flex items-center gap-2">
+            🌱 <span>상태창</span>
+        </h1>
+        
+        <!-- Profile Card -->
+        <div class="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-4 mb-6 border shadow-sm flex items-center gap-4">
+            <div id="profile-emoji" class="text-4xl bg-white w-16 h-16 rounded-full flex items-center justify-center shadow-inner">🌰</div>
+            <div>
+                <h2 id="profile-name" class="font-bold text-lg text-gray-800">애기 씨앗</h2>
+                <p id="profile-stage" class="text-xs text-green-600 font-medium">씨앗 단계</p>
+            </div>
+        </div>
+        
+        <!-- Energy Status -->
+        <div class="bg-gray-50 rounded-2xl p-5 mb-6 border">
+            <h2 class="text-md font-bold text-gray-700 mb-4 flex items-center gap-2">
+                ⚡ <span>에너지 상태</span>
+            </h2>
+            
+            <!-- Total Energy -->
+            <div class="mb-5">
+                <div class="flex justify-between text-sm font-bold text-gray-600 mb-1">
+                    <span>전체 성장 에너지</span>
+                    <span id="total-val">0 / 50</span>
+                </div>
+                <div class="w-full h-4 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+                    <div id="bar-total" class="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full transition-all duration-500 w-0"></div>
+                </div>
+                <p id="stage-info" class="text-xs text-green-600 mt-2 font-medium text-right">다음 진화까지: 5</p>
+            </div>
+
+            <hr class="my-4 border-gray-200">
+
+            <!-- Positive Energy -->
+            <div class="mb-4">
+                <div class="flex justify-between text-sm font-bold text-pink-600 mb-1">
+                    <span>💖 긍정 에너지</span>
+                    <span id="pos-val">0</span>
+                </div>
+                <div class="w-full h-3 bg-pink-50 rounded-full overflow-hidden shadow-inner">
+                    <div id="bar-pos" class="h-full bg-pink-400 rounded-full transition-all duration-500 w-0"></div>
+                </div>
+            </div>
+
+            <!-- Negative Energy -->
+            <div class="">
+                <div class="flex justify-between text-sm font-bold text-purple-600 mb-1">
+                    <span>🌧️ 부정 에너지</span>
+                    <span id="neg-val">0</span>
+                </div>
+                <div class="w-full h-3 bg-purple-50 rounded-full overflow-hidden shadow-inner">
+                    <div id="bar-neg" class="h-full bg-purple-500 rounded-full transition-all duration-500 w-0"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Trait -->
+        <div class="flex-1">
+            <div class="bg-white border rounded-2xl p-4 shadow-sm">
+                <h3 class="font-bold text-gray-700 mb-2 border-b pb-2 text-sm">현재 식물의 기분/성향</h3>
+                <p id="trait-desc" class="text-sm text-gray-600 mt-2">아직 싹을 틔우기 전입니다. 돌봐주세요!</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Center Panel: Plant Visualization -->
+    <main class="flex-1 bg-gradient-to-br from-blue-50 to-green-50 relative flex items-center justify-center">
+        <!-- Plant Container -->
+        <div class="relative flex flex-col items-center justify-center floating mt-10">
+            <h2 id="plant-name" class="text-3xl font-bold text-gray-700 mb-8 absolute -top-20 whitespace-nowrap">애기 씨앗</h2>
+
+            <!-- The Plant -->
+            <div id="plant-visual" class="text-9xl transition-all duration-500 filter drop-shadow-2xl">
+                🌰
+            </div>
+
+            <div class="mt-8 w-64 h-12 bg-black/10 rounded-[100%] blur-md"></div>
+        </div>
+        
+        <!-- Environment Deco -->
+        <div class="absolute bottom-0 w-full h-48 bg-gradient-to-t from-green-100 to-transparent pointer-events-none"></div>
+    </main>
+
+    <!-- Right Panel: Chat Interface -->
+    <aside class="w-[400px] bg-white border-l shadow-sm flex flex-col z-10">
+        <div class="p-4 border-b bg-white shadow-sm z-10 flex items-center gap-3">
+            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center text-xl">💬</div>
+            <div>
+                <h2 class="font-bold text-gray-800">식물과 소통하기</h2>
+                <p id="chat-subtitle" class="text-xs text-green-600">돌보기 액션이나 대화를 통해 성장을 도와주세요.</p>
+            </div>
+        </div>
+
+        <!-- Chat History -->
+        <div id="chat-box" class="flex-1 p-4 overflow-y-auto chat-scroll bg-gray-50 flex flex-col gap-4">
+            <!-- System Message -->
+            <div class="text-center my-2">
+                <span class="bg-black/10 text-gray-500 text-xs px-3 py-1 rounded-full">씨앗이 심어졌습니다. 먼저 정성껏 돌봐주세요!</span>
+            </div>
+        </div>
+
+        <!-- Action / Input Area -->
+        <div class="p-4 bg-white border-t">
+            
+            <!-- Quick Actions (Visible only in Seed Stage) -->
+            <div id="seed-actions" class="grid grid-cols-2 gap-2 mb-2">
+                <button onclick="sendQuickAction('물 주기', 'positive')" class="py-2 bg-blue-100 text-blue-700 rounded-xl text-sm font-bold hover:bg-blue-200 transition-colors">💧 물 주기 (+긍정)</button>
+                <button onclick="sendQuickAction('햇빛 쬐어주기', 'positive')" class="py-2 bg-yellow-100 text-yellow-700 rounded-xl text-sm font-bold hover:bg-yellow-200 transition-colors">☀️ 햇빛 쬐어주기 (+긍정)</button>
+                <button onclick="sendQuickAction('쓰다듬기', 'positive')" class="py-2 bg-pink-100 text-pink-700 rounded-xl text-sm font-bold hover:bg-pink-200 transition-colors">✋ 쓰다듬기 (+긍정)</button>
+                <button onclick="sendQuickAction('방치하기', 'negative')" class="py-2 bg-gray-200 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-300 transition-colors">🌫️ 방치하기 (+부정)</button>
+            </div>
+
+            <!-- Chat Input (Hidden in Seed Stage) -->
+            <div id="chat-input-area" class="flex gap-2 hidden">
+                <input type="text" id="chat-input" placeholder="대화 내용을 입력하세요..." autocomplete="off"
+                    onkeypress="if(event.key === 'Enter') sendMessage()"
+                    class="flex-1 bg-gray-100 border-transparent focus:border-green-500 focus:bg-white focus:ring-1 focus:ring-green-500 rounded-xl px-4 py-3 text-sm transition-colors shadow-inner">
+                <button onclick="sendMessage()" class="w-16 bg-green-500 hover:bg-green-600 rounded-xl text-white flex items-center justify-center shadow-md transition-colors font-bold cursor-pointer">
+                    전송
+                </button>
+            </div>
+            
+            <p class="text-[10px] text-gray-400 text-center mt-2" id="hint-text">씨앗 단계에서는 버튼으로 돌봐주어야 합니다.</p>
+        </div>
+    </aside>
+
+    <script>
+        // State variables
+        let totalEnergy = 0;
+        let posEnergy = 0;
+        let negEnergy = 0;
+        
+        // Settings
+        const MAX_ENERGY = 50;
+        const stages = [
+            { id: 'seed', threshold: 0, name: '씨앗', emoji: '🌰', sadEmoji: '🪨' },
+            { id: 'sprout', threshold: 5, name: '새싹', emoji: '🌱', sadEmoji: '🥀' },
+            { id: 'leaf', threshold: 15, name: '본잎', emoji: '🌿', sadEmoji: '🍂' },
+            { id: 'bud', threshold: 30, name: '봉오리', emoji: '🌷', sadEmoji: '🥀' },
+            { id: 'flower', threshold: 50, name: '꽃', emoji: '🌻', sadEmoji: '🥀' }
+        ];
+
+        // Keywords for rudimentary sentiment analysis
+        const posWords = ['예쁘다', '이쁘다', '사랑해', '좋아', '고마워', '최고', '귀여워', '착해', '잘했어', '멋져', '안녕', '반가워'];
+        const negWords = ['미워', '싫어', '바보', '짜증', '죽어', '못생겼', '나빠', '멍청', '왜그래', '못난이'];
+
+        // Persona responses based on stage and sentiment
+        const responses = {
+            pos: {
+                seed: ["(움찔움찔) 따뜻한 기운이 느껴져요!", "(조금씩 흔들린다) 기분이 좋아요!"],
+                sprout: ["고마워요! 햇살처럼 따뜻해요 헤헤", "쑥쑥 자랄게요!"],
+                leaf: ["네 칭찬을 들으니 잎이 더 넓어지는 기분이야!", "정말 고마워! 기분이 너무 좋아."],
+                bud: ["당신의 다정한 말 덕분에 예쁜 꽃을 피울 수 있을 것 같아요.", "항상 곁에 있어줘서 고마워요."],
+                flower: ["짜잔! 너의 사랑 덕분에 이렇게 예쁘게 피어났어!", "정말 고마워요. 이 꽃은 널 위한 거야!"]
+            },
+            neg: {
+                seed: ["(움츠러든다)... 춥고 외로워요.", "(가만히 멈춰있다) 무서워요..."],
+                sprout: ["흑흑... 물도 안 마시고 싶어...", "미워요... 잎이 시드는 기분이야."],
+                leaf: ["그런 말은 상처가 돼... 더 자라기 싫어져.", "왜 자꾸 날 아프게 하는 거야..."],
+                bud: ["...꽃을 피우기가 너무 힘들어...", "난 왜 태어난 걸까... 우울해."],
+                flower: ["...색깔이 다 바래버린 것 같아...", "예쁘게 피어났는데... 슬퍼."]
+            },
+            neutral: {
+                seed: ["... (조용히 숨을 쉰다)"],
+                sprout: ["물 좀 주실래요?", "무슨 뜻인지 잘 모르겠어요."],
+                leaf: ["음... 날씨가 참 좋네.", "광합성 중이야."],
+                bud: ["조금만 더 기다려줘.", "어떤 꽃이 필까?"],
+                flower: ["바람이 시원하네.", "나 예쁘지?"]
+            }
+        };
+
+        function getCurrentStage() {
+            let current = stages[0];
+            for(let i=0; i<stages.length; i++) {
+                if(totalEnergy >= stages[i].threshold) {
+                    current = stages[i];
+                }
+            }
+            return current;
+        }
+
+        function getSentiment(text) {
+            let pScore = 0;
+            let nScore = 0;
+            
+            posWords.forEach(w => { if(text.includes(w)) pScore++; });
+            negWords.forEach(w => { if(text.includes(w)) nScore++; });
+
+            if(pScore > nScore) return 'positive';
+            if(nScore > pScore) return 'negative';
+            return 'neutral';
+        }
+
+        function updateUI() {
+            const stage = getCurrentStage();
+            const isSad = negEnergy > posEnergy && totalEnergy > 0;
+            const isFlower = stage.id === 'flower';
+            const isSeed = stage.id === 'seed';
+
+            // Bars
+            const totalPercent = Math.min(100, (totalEnergy / MAX_ENERGY) * 100);
+            document.getElementById('bar-total').style.width = `${totalPercent}%`;
+            document.getElementById('total-val').innerText = `${totalEnergy} / ${MAX_ENERGY}`;
+
+            const posPercent = Math.min(100, (posEnergy / MAX_ENERGY) * 100);
+            document.getElementById('bar-pos').style.width = `${posPercent}%`;
+            document.getElementById('pos-val').innerText = posEnergy;
+
+            const negPercent = Math.min(100, (negEnergy / MAX_ENERGY) * 100);
+            document.getElementById('bar-neg').style.width = `${negPercent}%`;
+            document.getElementById('neg-val').innerText = negEnergy;
+
+            // Status Window Profile Updates
+            document.getElementById('profile-name').innerText = (isSad ? "우울한 " : "행복한 ") + stage.name;
+            document.getElementById('profile-stage').innerText = `${stage.name} 단계`;
+            document.getElementById('profile-emoji').innerText = isSad ? stage.sadEmoji : stage.emoji;
+            if(isSad) {
+                document.getElementById('profile-emoji').classList.add('sad-filter');
+            } else {
+                document.getElementById('profile-emoji').classList.remove('sad-filter');
+            }
+
+            // Stage Info
+            if (!isFlower) {
+                const nextThreshold = stages[stages.indexOf(stage) + 1].threshold;
+                document.getElementById('stage-info').innerText = `다음 진화까지: ${nextThreshold - totalEnergy}`;
+            } else {
+                document.getElementById('stage-info').innerText = `최종 진화 완료!`;
+            }
+
+            // Center Visual
+            document.getElementById('plant-name').innerText = (isSad ? "우울한 " : "행복한 ") + stage.name;
+            document.getElementById('plant-visual').innerText = isSad ? stage.sadEmoji : stage.emoji;
+            if(isSad) {
+                document.getElementById('plant-visual').classList.add('sad-filter');
+            } else {
+                document.getElementById('plant-visual').classList.remove('sad-filter');
+            }
+
+            // Trait
+            let traitText = "";
+            if(totalEnergy === 0) traitText = "아직 싹을 틔우기 전입니다. 버튼을 눌러 돌봐주세요!";
+            else if(isSad) traitText = "부정적인 에너지가 많이 쌓여 식물이 우울해하고 있습니다. 예쁜 말을 건네주세요 ㅠㅠ";
+            else traitText = "긍정적인 에너지를 듬뿍 받아 무럭무럭 기분 좋게 자라고 있습니다!";
+            document.getElementById('trait-desc').innerText = traitText;
+            
+            // Input Area Toggling (Seed vs Others)
+            if (isSeed) {
+                document.getElementById('seed-actions').classList.remove('hidden');
+                document.getElementById('chat-input-area').classList.add('hidden');
+                document.getElementById('chat-input-area').classList.remove('flex');
+                document.getElementById('hint-text').innerText = "씨앗 단계에서는 위의 버튼으로 돌봐주어야 합니다.";
+            } else {
+                document.getElementById('seed-actions').classList.add('hidden');
+                document.getElementById('chat-input-area').classList.remove('hidden');
+                document.getElementById('chat-input-area').classList.add('flex');
+                document.getElementById('hint-text').innerText = "텍스트를 입력하여 식물과 대화해보세요. (긍정/부정 단어 인식)";
+            }
+        }
+
+        function addMessage(text, isUser) {
+            const chatBox = document.getElementById('chat-box');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `flex gap-2 ${isUser ? 'flex-row-reverse' : ''} transition-all`;
+            
+            let bubbleClass = isUser 
+                ? 'bg-green-500 text-white p-3 rounded-2xl rounded-tr-sm shadow-sm text-sm'
+                : 'bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm text-sm text-gray-800 border';
+
+            let currentEmoji = (negEnergy > posEnergy && totalEnergy > 0) ? getCurrentStage().sadEmoji : getCurrentStage().emoji;
+            let avatar = isUser ? '' : `<div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 text-sm shadow-inner">${currentEmoji}</div>`;
+
+            msgDiv.innerHTML = `
+                ${avatar}
+                <div class="${bubbleClass}">
+                    ${text}
+                </div>
+            `;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function sendQuickAction(actionName, sentiment) {
+            addMessage(`[액션] ${actionName}`, true);
+            processEnergyAndReply(sentiment, getCurrentStage());
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if(!text) return;
+            
+            if (totalEnergy >= MAX_ENERGY) {
+                alert("이미 완전히 성장했습니다! 더 이상 진화하지 않습니다.");
+                input.value = '';
+                return;
+            }
+
+            addMessage(text, true);
+            input.value = '';
+
+            const sentiment = getSentiment(text);
+            processEnergyAndReply(sentiment, getCurrentStage());
+        }
+
+        function processEnergyAndReply(sentiment, prevStage) {
+            let replies = [];
+
+            if(sentiment === 'positive') {
+                posEnergy++;
+                totalEnergy++;
+                replies = responses.pos[prevStage.id];
+            } else if(sentiment === 'negative') {
+                negEnergy++;
+                totalEnergy++;
+                replies = responses.neg[prevStage.id];
+            } else {
+                totalEnergy++;
+                replies = responses.neutral[prevStage.id];
+            }
+
+            const replyText = replies[Math.floor(Math.random() * replies.length)];
+            
+            updateUI(); 
+
+            setTimeout(() => {
+                const newStage = getCurrentStage();
+                if(newStage.id !== prevStage.id) {
+                    const chatBox = document.getElementById('chat-box');
+                    const sysDiv = document.createElement('div');
+                    sysDiv.className = "text-center my-3";
+                    sysDiv.innerHTML = `<span class="bg-yellow-100 text-yellow-800 font-bold text-xs px-4 py-2 rounded-full shadow-sm ring-2 ring-yellow-200">✨ ${newStage.name} 단계로 진화했습니다! ✨</span>`;
+                    chatBox.appendChild(sysDiv);
+                }
+                
+                addMessage(replyText, false);
+            }, 500);
+        }
+
+        // Initialize
+        updateUI();
+
+    </script>
+</body>
+</html>
