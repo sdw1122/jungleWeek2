@@ -1,0 +1,1 @@
+const notice=document.querySelector('.notice');document.querySelectorAll('[data-coming]').forEach(button=>button.addEventListener('click',()=>{notice.textContent='이 기능은 곧 만날 수 있어요. 준비 중입니다! 🌱';notice.classList.add('show');setTimeout(()=>notice.classList.remove('show'),2200)}));
