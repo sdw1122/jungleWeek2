@@ -1,4 +1,5 @@
 let positive=0,negative=0;
+let completionShown=false;
 const messages=document.querySelector('#messages');
 const stagePlant=document.querySelector('#seed');
 const chosen=JSON.parse(localStorage.getItem('farmdaPlant')||'null');
@@ -30,6 +31,7 @@ function updateGrowth(){
   document.querySelector('#mini-stage').textContent=stage.emoji;
   document.querySelector('#mood-copy').textContent=positive>=negative?stage.mood:'관심이 조금 부족해요. 따뜻하게 돌봐주세요.';
   if(stagePlant.textContent!==stage.emoji){stagePlant.textContent=stage.emoji;stagePlant.animate([{transform:'scale(.5) rotate(-12deg)',opacity:.2},{transform:'scale(1.2) rotate(5deg)',opacity:1},{transform:'scale(1)'}],{duration:600,easing:'ease-out'});}
+  if(total>=100&&!completionShown){completionShown=true;window.setTimeout(()=>{document.querySelector('#growth-modal').hidden=false;document.body.style.overflow='hidden';},500);}
 }
 
 document.querySelectorAll('[data-action]').forEach(button=>button.addEventListener('click',()=>{
@@ -42,3 +44,8 @@ document.querySelectorAll('[data-action]').forEach(button=>button.addEventListen
   stagePlant.animate([{transform:'scale(.94)'},{transform:'scale(1.08)'},{transform:'scale(1)'}],{duration:320});
 }));
 updateGrowth();
+const growthModal=document.querySelector('#growth-modal');
+function closeGrowthModal(){growthModal.hidden=true;document.body.style.overflow='';}
+document.querySelector('.modal-later').addEventListener('click',closeGrowthModal);
+document.querySelector('.growth-modal-backdrop').addEventListener('click',closeGrowthModal);
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!growthModal.hidden)closeGrowthModal();});

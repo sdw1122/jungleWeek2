@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css?v=4">
   <link rel="stylesheet" href="../css/dashboard-fixes.css?v=4">
-  <link rel="stylesheet" href="../css/growth-stages.css?v=4">
+  <link rel="stylesheet" href="../css/growth-stages.css?v=5">
 </head>
 <body>
 <main class="dashboard">
@@ -34,5 +34,16 @@
     <div class="actions"><button data-action="water">💧 물 주기 (+5)</button><button data-action="sun">🌞 햇빛 쬐어주기 (+5)</button><button data-action="pet">✋ 쓰다듬기 (+5)</button><button class="neg" data-action="ignore">🌫️ 방치하기 (+5 부정)</button><small>5 · 20 · 40 · 70 · 100 에너지마다 성장 단계가 변합니다.</small></div>
   </section>
 </main>
-<script src="../js/dashboard.js?v=4"></script>
+<div class="growth-modal" id="growth-modal" hidden role="dialog" aria-modal="true" aria-labelledby="growth-modal-title">
+  <div class="growth-modal-backdrop"></div>
+  <section class="growth-modal-card">
+    <div class="celebration" aria-hidden="true">🎉</div>
+    <p class="modal-label">GROWTH COMPLETE</p>
+    <h2 id="growth-modal-title">축하합니다!<br>다 키우셨어요~</h2>
+    <p>진짜 사랑하는 사람에게 식물을 선물하고 싶으시면<br><strong>카카오톡 선물하기</strong>를 눌러주세요!</p>
+    <a class="kakao-gift" href="https://gift.kakao.com" target="_blank" rel="noopener noreferrer"><span>💬</span> 카카오톡 선물하기</a>
+    <button class="modal-later" type="button">조금 더 둘러볼게요</button>
+  </section>
+</div>
+<script src="../js/dashboard.js?v=5"></script>
 </body></html>
