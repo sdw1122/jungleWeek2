@@ -1,0 +1,8 @@
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Login
+Authlib
+psycopg[binary]
+python-dotenv
+waitress
