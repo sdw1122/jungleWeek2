@@ -1,0 +1,67 @@
+.thumbs { z-index: 3; }
+.thumbs button { width:74px; height:74px; padding:0; border:2px solid transparent; background:url("https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=240&q=70") center/cover; cursor:pointer; opacity:.58; transition:opacity .2s,border-color .2s,transform .2s; }
+.thumbs button:nth-child(2) { background-image:url("https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=240&q=70"); }
+.thumbs button:nth-child(3) { background-image:url("https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?auto=format&fit=crop&w=240&q=70"); }
+.thumbs button:hover { opacity:.88; transform:translateY(-3px); }
+.thumbs button.active { border-color:#fff; opacity:1; }
+.submit { border-color:#d88925; background:#c96f1c; transition:background .2s,transform .2s; }
+.submit:hover { background:#e38a2d; transform:translateY(-1px); }
+@media(max-width:760px) { .thumbs button { width:54px; height:54px; } }
+
+/* Light Farmda theme */
+:root {
+  --bg: #ffffff;
+  --white: #111111;
+  --line: rgba(0, 0, 0, .14);
+}
+
+html, body,
+.shell {
+  background: #ffffff;
+  color: #111111;
+}
+
+.site-title,
+.auth {
+  border-color: rgba(0, 0, 0, .14);
+}
+
+.site-title h1,
+.view h2,
+.copy,
+.tab,
+.check,
+.switch,
+.auth footer,
+body,
+input,
+button {
+  color: #111111;
+}
+
+.tab { opacity: .55; }
+.tab.active { opacity: 1; }
+.tab.active::after { background: #071108; }
+
+form > label:not(.check) {
+  color: #111111;
+  border-color: rgba(0, 0, 0, .2);
+}
+
+form > label:focus-within { border-color: #071108; }
+input { color: #111111; }
+input::placeholder { color: rgba(0, 0, 0, .45); }
+.check input { border-color: #111111; }
+.check input:checked { background: #071108; box-shadow: inset 0 0 0 2px #ffffff; }
+.link,
+.switch button { color: #111111; }
+
+.submit {
+  color: #ffffff;
+  background: #071108;
+  border-color: #071108;
+}
+.submit:hover { background: #14271a; }
+
+.frame { border-color: rgba(0, 0, 0, .15); }
+.auth footer { opacity: .55; }
