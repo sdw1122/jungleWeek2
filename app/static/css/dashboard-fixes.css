@@ -1,0 +1,42 @@
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+.conversation {
+  grid-template-rows: 90px minmax(0, 1fr) auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.messages {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #cfd6dc transparent;
+}
+
+.actions {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  box-shadow: 0 -8px 20px rgba(38, 50, 56, .04);
+}
+
+@media (max-width: 980px) {
+  html, body {
+    height: auto;
+    overflow: auto;
+  }
+
+  .conversation {
+    height: 100vh;
+    min-height: 650px;
+  }
+
+  .actions {
+    position: sticky;
+    bottom: 0;
+  }
+}
