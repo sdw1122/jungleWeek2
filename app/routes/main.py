@@ -41,6 +41,14 @@ def frontend_page(page: str):
         return jsonify(status="error", message="page not found"), 404
     if page not in {"dictionary", "legacy-wireframe"} and not current_user.is_authenticated:
         return redirect(url_for("main.login", next=request.path))
+    if page == "dashboard":
+        return redirect(
+            url_for(
+                "main.frontend_page",
+                page="dashboard-v2",
+                **request.args.to_dict(),
+            )
+        )
     return render_template(f"{page}.html")
 
 

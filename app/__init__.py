@@ -2,7 +2,7 @@ from flask import Flask
 from sqlalchemy.exc import SQLAlchemyError
 
 from .config import Config
-from .extensions import db, login_manager, migrate
+from .extensions import db, login_manager, migrate, oauth
 from .security import init_csrf
 
 
@@ -15,10 +15,11 @@ def create_app(config_overrides: dict | None = None) -> Flask:
     db.init_app(app)
     login_manager.init_app(app)
     migrate.init_app(app, db)
+    oauth.init_app(app)
     init_csrf(app)
 
     from .models import User
-    from .routes import auth_bp, main_bp
+    from .routes import auth_bp, main_bp, plants_bp
 
     @login_manager.user_loader
     def load_user(user_id: str):
@@ -63,5 +64,6 @@ def create_app(config_overrides: dict | None = None) -> Flask:
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(plants_bp)
     return app
 

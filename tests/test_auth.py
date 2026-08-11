@@ -1,8 +1,10 @@
 import unittest
+from unittest.mock import patch
 
 from app import create_app
-from app.extensions import db
+from app.extensions import db, oauth
 from app.models import User
+from app.routes.auth import GoogleAccountError, find_or_create_google_user
 
 
 class AuthApiTestCase(unittest.TestCase):
@@ -14,6 +16,8 @@ class AuthApiTestCase(unittest.TestCase):
                 "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
                 "SESSION_COOKIE_SECURE": False,
                 "REMEMBER_COOKIE_SECURE": False,
+                "GOOGLE_CLIENT_ID": "test-google-client-id",
+                "GOOGLE_CLIENT_SECRET": "test-google-client-secret",
             }
         )
         self.client = self.app.test_client()
@@ -122,6 +126,108 @@ class AuthApiTestCase(unittest.TestCase):
         response = self.client.get("/dashboard-v2.html")
         self.assertEqual(response.status_code, 302)
         self.assertIn("/login.html?next=/dashboard-v2.html", response.location)
+
+    def test_legacy_dashboard_redirects_to_current_dashboard(self):
+        self.signup()
+        self.post(
+            "/api/v1/auth/login",
+            {
+                "email": "user@example.com",
+                "password": "password123",
+                "remember": False,
+            },
+        )
+        response = self.client.get("/dashboard.html?plantId=12")
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.location.endswith("/dashboard-v2.html?plantId=12"))
+
+    def test_google_login_requires_configuration(self):
+        self.app.config["GOOGLE_CLIENT_ID"] = ""
+        response = self.client.get("/api/v1/auth/google")
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/login.html?oauthError=not_configured", response.location)
+
+    def test_google_callback_creates_user_and_logs_in(self):
+        profile = {
+            "sub": "google-subject-123",
+            "email": "GOOGLE@Example.com",
+            "email_verified": True,
+            "name": "초록이",
+            "picture": "https://example.com/profile.png",
+        }
+        with patch.object(
+            oauth.google,
+            "authorize_access_token",
+            return_value={"userinfo": profile},
+        ):
+            response = self.client.get("/api/v1/auth/google/callback")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.location.endswith("/welcome.html"))
+        self.assertEqual(self.client.get("/api/v1/auth/me").status_code, 200)
+        with self.app.app_context():
+            user = User.query.one()
+            self.assertEqual(user.email, "google@example.com")
+            self.assertEqual(user.auth_provider, "GOOGLE")
+            self.assertEqual(user.google_subject, "google-subject-123")
+            self.assertIsNone(user.password_hash)
+
+    def test_google_profile_reuses_subject_and_keeps_unique_nickname(self):
+        with self.app.app_context():
+            first = find_or_create_google_user(
+                {
+                    "sub": "google-1",
+                    "email": "first@example.com",
+                    "email_verified": True,
+                    "name": "초록이",
+                }
+            )
+            second = find_or_create_google_user(
+                {
+                    "sub": "google-2",
+                    "email": "second@example.com",
+                    "email_verified": True,
+                    "name": "초록이",
+                }
+            )
+            reused = find_or_create_google_user(
+                {
+                    "sub": "google-1",
+                    "email": "first@example.com",
+                    "email_verified": True,
+                    "name": "변경된 이름",
+                }
+            )
+            self.assertEqual(first.id, reused.id)
+            self.assertEqual(second.nickname, "초록이-2")
+            self.assertEqual(User.query.count(), 2)
+
+    def test_google_profile_does_not_auto_link_local_account(self):
+        self.assertEqual(self.signup().status_code, 201)
+        with self.app.app_context():
+            with self.assertRaises(GoogleAccountError) as context:
+                find_or_create_google_user(
+                    {
+                        "sub": "google-subject-duplicate",
+                        "email": "user@example.com",
+                        "email_verified": True,
+                        "name": "초록이",
+                    }
+                )
+            self.assertEqual(context.exception.code, "account_exists")
+
+    def test_google_profile_requires_verified_email(self):
+        with self.app.app_context():
+            with self.assertRaises(GoogleAccountError) as context:
+                find_or_create_google_user(
+                    {
+                        "sub": "google-unverified",
+                        "email": "unverified@example.com",
+                        "email_verified": False,
+                        "name": "미인증 사용자",
+                    }
+                )
+            self.assertEqual(context.exception.code, "email_unverified")
 
 
 if __name__ == "__main__":

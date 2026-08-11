@@ -15,7 +15,7 @@ function showToast(message, isError = false) {
   toast.classList.toggle('error', isError);
   toast.classList.add('show');
   window.clearTimeout(showToast.timer);
-  showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 2600);
+  showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 3600);
 }
 
 function setBusy(form, busy) {
@@ -25,9 +25,7 @@ function setBusy(form, busy) {
 }
 
 async function loadCsrf() {
-  const response = await fetch('/api/v1/auth/csrf', {
-    credentials: 'same-origin'
-  });
+  const response = await fetch('/api/v1/auth/csrf', { credentials: 'same-origin' });
   if (!response.ok) throw new Error('로그인 보안 정보를 불러오지 못했습니다.');
   const payload = await response.json();
   csrfToken = payload.data.csrfToken;
@@ -46,20 +44,13 @@ async function apiRequest(path, options, retryCsrf = true) {
   });
   const payload = await response.json().catch(() => ({}));
 
-  if (
-    retryCsrf &&
-    response.status === 403 &&
-    payload.error?.code === 'CSRF_TOKEN_INVALID'
-  ) {
+  if (retryCsrf && response.status === 403 && payload.error?.code === 'CSRF_TOKEN_INVALID') {
     csrfToken = '';
     await loadCsrf();
     return apiRequest(path, options, false);
   }
-
   if (!response.ok) {
-    const fieldMessage = payload.error?.fields
-      ? Object.values(payload.error.fields)[0]
-      : null;
+    const fieldMessage = payload.error?.fields ? Object.values(payload.error.fields)[0] : null;
     throw new Error(fieldMessage || payload.error?.message || '요청 처리에 실패했습니다.');
   }
   return payload;
@@ -127,15 +118,30 @@ document.querySelector('.link').addEventListener('click', () => {
   showToast('비밀번호 찾기는 다음 단계에서 제공됩니다.');
 });
 
+const oauthErrors = {
+  not_configured: 'Google 로그인이 아직 설정되지 않았습니다. 관리자에게 문의해 주세요.',
+  account_exists: '같은 이메일로 가입된 계정이 있습니다. 이메일과 비밀번호로 로그인해 주세요.',
+  account_withdrawn: '탈퇴 처리된 계정입니다.',
+  email_unverified: 'Google에서 이메일 인증이 확인되지 않았습니다.',
+  invalid_profile: 'Google 계정 정보를 확인할 수 없습니다.',
+  cancelled: 'Google 로그인이 취소되었습니다.',
+  oauth_failed: 'Google 로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.'
+};
+const query = new URLSearchParams(location.search);
+const oauthError = query.get('oauthError');
+if (oauthError) {
+  showToast(oauthErrors[oauthError] || oauthErrors.oauth_failed, true);
+  query.delete('oauthError');
+  const cleanUrl = `${location.pathname}${query.size ? `?${query}` : ''}`;
+  history.replaceState({}, '', cleanUrl);
+}
+
 const plant = document.querySelector('.plant');
 const thumbnails = document.querySelectorAll('.thumbs button');
 thumbnails.forEach(button => button.addEventListener('click', () => {
   plant.style.backgroundImage = `url("${button.dataset.image}")`;
   thumbnails.forEach(item => item.classList.toggle('active', item === button));
-  plant.animate(
-    [{ opacity: .55 }, { opacity: 1 }],
-    { duration: 350, easing: 'ease-out' }
-  );
+  plant.animate([{ opacity: .55 }, { opacity: 1 }], { duration: 350, easing: 'ease-out' });
 }));
 
 loadCsrf().catch(error => showToast(error.message, true));

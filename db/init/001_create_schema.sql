@@ -111,7 +111,7 @@ CREATE TABLE care_logs (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT chk_care_logs_action_type
-        CHECK (action_type IN ('PRAISE', 'PET', 'WATER', 'SUNLIGHT'))
+        CHECK (action_type IN ('PRAISE', 'PET', 'WATER', 'SUNLIGHT', 'IGNORE'))
 );
 
 CREATE TABLE chat_sessions (
