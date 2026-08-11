@@ -19,6 +19,7 @@ def frontend_page(page: str):
     allowed_pages = {
         "main",
         "diary",
+        "shop",
         "plant-select",
         "dashboard",
         "dashboard-v2",
