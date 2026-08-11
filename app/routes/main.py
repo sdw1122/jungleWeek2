@@ -17,10 +17,10 @@ def index():
 def frontend_page(page: str):
     """Serve the migrated Farmda screens from the Flask template folder."""
     allowed_pages = {
-        "main",
+        "welcome",
         "diary",
-        "shop",
         "plant-select",
+        "my-plants",
         "dashboard",
         "dashboard-v2",
         "legacy-wireframe",
@@ -44,11 +44,6 @@ def legacy_js(filename: str):
 @main_bp.get("/login.html")
 def login():
     return render_template("login.html")
-
-
-@main_bp.get("/main.html")
-def main_page():
-    return render_template("main.html")
 
 
 @main_bp.get("/dictionary.html")
