@@ -26,6 +26,7 @@ services:
       SECRET_KEY: ${SECRET_KEY:-change-this-in-local-development}
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-plant_user}:${POSTGRES_PASSWORD:-plant_password}@db:5432/${POSTGRES_DB:-plant_app}
       SESSION_COOKIE_SECURE: "0"
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
     ports:
       - "5000:5000"
     depends_on:
@@ -41,3 +42,4 @@ services:
 
 volumes:
   postgres_data:
+

@@ -63,5 +63,8 @@ def create_app(config_overrides: dict | None = None) -> Flask:
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
+    from .routes.chat import chat_bp
+    app.register_blueprint(chat_bp)
     return app
+
 

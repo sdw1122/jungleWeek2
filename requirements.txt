@@ -6,3 +6,5 @@ Authlib
 psycopg[binary]
 python-dotenv
 waitress
+
+google-generativeai

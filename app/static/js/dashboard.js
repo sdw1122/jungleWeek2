@@ -1,3 +1,4 @@
+let lastAiEmotion = null;
 let positive=0,negative=0;
 let completionShown=false;
 const messages=document.querySelector('#messages');
@@ -6,24 +7,38 @@ const seedActions=document.querySelector('#seed-actions');
 const chatForm=document.querySelector('#chat-form');
 const chatInput=document.querySelector('#chat-input');
 const chosen=JSON.parse(localStorage.getItem('farmdaPlant')||'null');
-if(chosen){positive=Math.max(0,Math.min(100,Number(chosen.energy)||0));negative=Math.max(0,Math.min(100,Number(chosen.negativeEnergy)||0));}
-const prefixPattern=/^(사랑을 담은|행운의|감사의|건강을 기원하는|싱그러운|우리의|존경의|사랑의)\s*/;
-const plantName=chosen?chosen.name.replace(prefixPattern,''):'식물';
+if(chosen){
+    negative=Math.max(0,Math.min(100,Number(chosen.negativeEnergy)||0)); 
+    positive=Math.max(0,Math.min(100,Number(chosen.positiveEnergy!==undefined?chosen.positiveEnergy:(chosen.energy||0)-negative)));
+}
+const prefixPattern=/^(이름 없음|무명|이름|이름없는 식물|이름모를|아무이름|없음|무)\s*/;
+const plantName=chosen?chosen.name.replace(prefixPattern,''):'반려식물';
 document.querySelector('#plant-name').textContent=plantName;
 document.querySelector('.plant-chip h2').textContent=plantName;
 
 const stages=[
-  {min:0,name:'씨앗',emoji:'🌰',next:5,mood:'아직 싹을 틔우기 전입니다. 정성껏 돌봐주세요!'},
-  {min:5,name:'떡잎',emoji:'🌱',next:20,mood:'작은 떡잎이 고개를 내밀었어요.'},
-  {min:20,name:'본잎',emoji:'🪴',next:40,mood:'튼튼한 본잎이 자라며 생기가 넘쳐요.'},
-  {min:40,name:'봉오리',emoji:'🌷',next:70,mood:'곧 꽃을 피울 봉오리가 맺혔어요.'},
-  {min:70,name:'꽃',emoji:'🌸',next:100,mood:'정성 덕분에 아름다운 꽃이 피었어요!'}
+  {min:0,name:'씨앗',emoji:'🌱',next:5,mood:'아직 흙 속에 있습니다. 물을 주세요!'},
+  {min:5,name:'새싹',emoji:'🌿',next:20,mood:'작은 잎이 돋아났어요.'},
+  {min:20,name:'유묘',emoji:'🪴',next:40,mood:'튼튼한 줄기와 잎사귀가 생겼어요.'},
+  {min:40,name:'성목',emoji:'🌳',next:70,mood:'아주 크게 자라고 있어요.'},
+  {min:70,name:'열매',emoji:'🍎',next:100,mood:'드디어 탐스러운 열매가 열렸어요!'}
 ];
-const replies={water:'시원해요! 뿌리가 촉촉해졌어요. 💧',sun:'따뜻한 햇빛 덕분에 힘이 나요! ☀️',pet:'정성스러운 손길이 느껴져요. 🌱',ignore:'조금 외로워요. 저를 잊지 말아주세요. 🌧️'};
+const replies={water:'물주기완료! 촉촉해 졌어요. 💧',sun:'광합성중! 햇빛을 듬뿍 받고 있어요! ☀️',pet:'쓰담쓰담! 기분이 좋아요. ☺️',ignore:'조금 외로워요. 관심 좀 주세요. 😢'};
 
 function updateGrowth(){
   const total=Math.min(100,positive+negative);
   const stage=[...stages].reverse().find(item=>total>=item.min);
+  
+  let currentStageName = stage.name;
+  let currentEmoji = stage.emoji;
+  let currentMood = stage.mood;
+
+  if (negative > positive) {
+      currentStageName = "흑화(" + stage.name + ")";
+      currentEmoji = "🥀";
+      currentMood = "불량하고 삐뚤어졌습니다.";
+  }
+  
   document.querySelector('#positive').textContent=positive;
   document.querySelector('#negative').textContent=negative;
   document.querySelector('#total').textContent=total;
@@ -31,15 +46,44 @@ function updateGrowth(){
   document.querySelector('#negative-bar').style.width=`${Math.min(100,negative)}%`;
   document.querySelector('#total-bar').style.width=`${total}%`;
   document.querySelector('#next').textContent=total>=100?'완료':Math.max(0,stage.next-total);
-  document.querySelector('#stage-label').textContent=`${stage.name} 단계`;
-  document.querySelector('#mini-stage').textContent=stage.emoji;
-  document.querySelector('#mood-copy').textContent=positive>=negative?stage.mood:'관심이 조금 부족해요. 따뜻하게 돌봐주세요.';
-  if(chosen){chosen.energy=total;chosen.negativeEnergy=negative;chosen.stage=stage.name;localStorage.setItem('farmdaPlant',JSON.stringify(chosen));const savedPlants=JSON.parse(localStorage.getItem('farmdaPlants')||'[]');const savedIndex=savedPlants.findIndex(item=>(item.id&&item.id===chosen.id)||item.name===chosen.name);if(savedIndex>=0){savedPlants[savedIndex]={...savedPlants[savedIndex],...chosen};}else{savedPlants.push(chosen);}localStorage.setItem('farmdaPlants',JSON.stringify(savedPlants));}
+  document.querySelector('#stage-label').textContent=`${currentStageName} 단계`;
+  document.querySelector('#mini-stage').textContent=currentEmoji;
+  
+  if (lastAiEmotion) {
+      document.querySelector('#mood-copy').textContent = "현재 기분: " + lastAiEmotion;
+  } else {
+      document.querySelector('#mood-copy').textContent = currentMood;
+  }
+  
+  if(chosen){
+      chosen.energy=total;
+      chosen.positiveEnergy=positive;
+      chosen.negativeEnergy=negative;
+      chosen.stage=stage.name;
+      localStorage.setItem('farmdaPlant',JSON.stringify(chosen));
+      const savedPlants=JSON.parse(localStorage.getItem('farmdaPlants')||'[]');
+      const savedIndex=savedPlants.findIndex(item=>(item.id&&item.id===chosen.id)||item.name===chosen.name);
+      if(savedIndex>=0){
+          savedPlants[savedIndex]={...savedPlants[savedIndex],...chosen};
+      }else{
+          savedPlants.push(chosen);
+      }
+      localStorage.setItem('farmdaPlants',JSON.stringify(savedPlants));
+  }
+  
   const isSeed=total<5;
   seedActions.hidden=!isSeed;
   chatForm.hidden=isSeed;
-  if(stagePlant.textContent!==stage.emoji){stagePlant.textContent=stage.emoji;stagePlant.animate([{transform:'scale(.5) rotate(-12deg)',opacity:.2},{transform:'scale(1.2) rotate(5deg)',opacity:1},{transform:'scale(1)'}],{duration:600,easing:'ease-out'});}
-  if(total>=100&&!completionShown){completionShown=true;window.setTimeout(()=>{document.querySelector('#growth-modal').hidden=false;document.body.style.overflow='hidden';},500);}
+  
+  if(stagePlant.textContent!==currentEmoji){
+      stagePlant.textContent=currentEmoji;
+      stagePlant.animate([{transform:'scale(.5) rotate(-12deg)',opacity:.2},{transform:'scale(1.2) rotate(5deg)',opacity:1},{transform:'scale(1)'}],{duration:600,easing:'ease-out'});
+  }
+  
+  if(total>=100&&!completionShown){
+      completionShown=true;
+      window.setTimeout(()=>{document.querySelector('#growth-modal').hidden=false;document.body.style.overflow='hidden';},500);
+  }
 }
 
 document.querySelectorAll('[data-action]').forEach(button=>button.addEventListener('click',()=>{
@@ -52,19 +96,50 @@ document.querySelectorAll('[data-action]').forEach(button=>button.addEventListen
   stagePlant.animate([{transform:'scale(.94)'},{transform:'scale(1.08)'},{transform:'scale(1)'}],{duration:320});
 }));
 
-const positiveWords=['사랑','예뻐','예쁘다','좋아','고마워','잘했어','힘내','행복','멋져','소중'];
-const negativeWords=['싫어','미워','못생겼','바보','짜증','죽어','별로','안 예뻐'];
-chatForm.addEventListener('submit',event=>{
+chatForm.addEventListener('submit', async event => {
   event.preventDefault();
-  const text=chatInput.value.trim();
-  if(!text||positive+negative>=100)return;
-  const isNegative=negativeWords.some(word=>text.includes(word));
-  const isPositive=positiveWords.some(word=>text.includes(word));
-  if(isNegative&&!isPositive)negative=Math.min(100,negative+5);else positive=Math.min(100,positive+5);
-  messages.insertAdjacentHTML('beforeend',`<p class="user">${text.replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}</p>`);
-  messages.insertAdjacentHTML('beforeend',`<p>${isNegative&&!isPositive?'조금 속상해요. 그래도 곁에 있어주세요. 🌧️':'따뜻한 말 고마워요! 마음이 쑥쑥 자라요. 🌱'}</p>`);
-  chatInput.value='';
-  messages.scrollTop=messages.scrollHeight;
+  const text = chatInput.value.trim();
+  if (!text || positive + negative >= 100) return;
+  
+  messages.insertAdjacentHTML('beforeend', '<p class="user">' + text.replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char])) + '</p>');
+  chatInput.value = '';
+  messages.scrollTop = messages.scrollHeight;
+  
+  try {
+    const csrfRes = await fetch('/api/v1/auth/csrf');
+    const csrfPayload = await csrfRes.json();
+    const token = csrfPayload.data.csrfToken;
+
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': token
+      },
+      body: JSON.stringify({ plant_id: 1, message: text })
+    });
+    
+    if (res.ok) {
+      const data = await res.json();
+      messages.insertAdjacentHTML('beforeend', '<p>' + data.response + '</p>');
+      
+      if (data.emotion) {
+          lastAiEmotion = data.emotion;
+      }
+      
+      if (data.sentiment === "POSITIVE") {
+          positive = Math.min(100, positive + 1);
+      } else if (data.sentiment === 'NEGATIVE') {
+          negative = Math.min(100, negative + 1);
+      }
+    } else {
+      messages.insertAdjacentHTML('beforeend', '<p>앗, 연결에 문제가 생겼어요.</p>');
+    }
+  } catch(e) {
+    messages.insertAdjacentHTML('beforeend', '<p>Error: ' + e.message + '</p>');
+  }
+  
+  messages.scrollTop = messages.scrollHeight;
   updateGrowth();
 });
 
@@ -76,7 +151,10 @@ profileToggle.addEventListener('click',()=>{
   profileToggle.setAttribute('aria-expanded',String(willOpen));
 });
 document.addEventListener('click',event=>{
-  if(!profileCard.hidden&&!profileCard.contains(event.target)&&event.target!==profileToggle){profileCard.hidden=true;profileToggle.setAttribute('aria-expanded','false');}
+  if(!profileCard.hidden&&!profileCard.contains(event.target)&&event.target!==profileToggle){
+      profileCard.hidden=true;
+      profileToggle.setAttribute('aria-expanded','false');
+  }
 });
 updateGrowth();
 const growthModal=document.querySelector('#growth-modal');
