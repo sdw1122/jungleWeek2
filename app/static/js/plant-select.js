@@ -1,21 +1,21 @@
 const cards = [...document.querySelectorAll('.plant-card')];
-const filters = document.querySelectorAll('.filter');
+const speciesFilters = document.querySelectorAll('.species-filters .filter');
+const occasionFilters = document.querySelectorAll('.occasion-filters .filter');
 const search = document.querySelector('#search');
 const bar = document.querySelector('.selection-bar');
 const selectedName = document.querySelector('#selected-name');
 const continueButton = document.querySelector('#continue');
-let category = 'all';
+let species = 'all';
+let occasion = 'all';
 let selected = null;
-
-cards.forEach(card => {
-  card.querySelector('.photo').style.backgroundImage = `url("${card.dataset.image}")`;
-});
 
 function filterCards() {
   const term = search.value.trim().toLowerCase();
   let count = 0;
   cards.forEach(card => {
-    const visible = (category === 'all' || card.dataset.category === category)
+    const occasions = card.dataset.occasions.split(',');
+    const visible = (species === 'all' || card.dataset.species === species)
+      && (occasion === 'all' || occasions.includes(occasion))
       && card.dataset.name.toLowerCase().includes(term);
     card.hidden = !visible;
     if (visible) count += 1;
@@ -30,9 +30,14 @@ async function csrfToken() {
   return payload.data.csrfToken;
 }
 
-filters.forEach(button => button.addEventListener('click', () => {
-  category = button.dataset.filter;
-  filters.forEach(item => item.classList.toggle('active', item === button));
+speciesFilters.forEach(button => button.addEventListener('click', () => {
+  species = button.dataset.species;
+  speciesFilters.forEach(item => item.classList.toggle('active', item === button));
+  filterCards();
+}));
+occasionFilters.forEach(button => button.addEventListener('click', () => {
+  occasion = button.dataset.occasion;
+  occasionFilters.forEach(item => item.classList.toggle('active', item === button));
   filterCards();
 }));
 search.addEventListener('input', filterCards);
@@ -59,7 +64,9 @@ continueButton.addEventListener('click', async () => {
       },
       body: JSON.stringify({
         name: selected.dataset.name,
-        imageUrl: selected.dataset.image
+        speciesName: selected.dataset.name,
+        category: selected.dataset.species,
+        emoji: selected.dataset.emoji
       })
     });
     const payload = await response.json().catch(() => ({}));

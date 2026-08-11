@@ -72,6 +72,9 @@ class PlantApiTestCase(unittest.TestCase):
             "/api/v1/plants",
             {
                 "name": name,
+                "speciesName": name,
+                "category": "foliage",
+                "emoji": "🌿",
                 "imageUrl": "https://example.com/monstera.jpg",
             },
             client,
@@ -83,6 +86,7 @@ class PlantApiTestCase(unittest.TestCase):
         plant_data = response.get_json()["data"]["plant"]
         self.assertEqual(plant_data["growthScore"], 0)
         self.assertEqual(plant_data["stageLabel"], "씨앗")
+        self.assertEqual(plant_data["emoji"], "🌿")
 
         list_response = self.client.get("/api/v1/plants")
         self.assertEqual(list_response.status_code, 200)

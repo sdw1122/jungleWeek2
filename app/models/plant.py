@@ -14,6 +14,9 @@ class PlantSpecies(db.Model):
         db.BigInteger().with_variant(db.Integer, "sqlite"),
         primary_key=True,
     )
+    name = db.Column(db.String(50), nullable=False, unique=True)
+    category = db.Column(db.String(30))
+    emoji = db.Column(db.String(16))
     image_url = db.Column(db.Text)
     created_at = db.Column(
         db.DateTime(timezone=True), nullable=False, server_default=func.now()
@@ -97,6 +100,9 @@ class Plant(db.Model):
         return {
             "id": self.id,
             "name": self.name,
+            "speciesName": self.species.name if self.species else None,
+            "category": self.species.category if self.species else None,
+            "emoji": self.species.emoji if self.species else None,
             "imageUrl": self.species.image_url if self.species else None,
             "growthScore": self.growth_score,
             "positiveEnergy": self.positive_energy,

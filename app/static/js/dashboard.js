@@ -183,6 +183,14 @@ document.addEventListener('click', event => {
     profileToggle.setAttribute('aria-expanded', 'false');
   }
 });
+document.querySelector('#profile-logout').addEventListener('click', async () => {
+  try {
+    await apiRequest('/api/v1/auth/logout', { method: 'POST' });
+    location.href = '/login.html';
+  } catch (error) {
+    messages.insertAdjacentHTML('beforeend', `<p>${error.message}</p>`);
+  }
+});
 
 const growthModal = document.querySelector('#growth-modal');
 function closeGrowthModal() {

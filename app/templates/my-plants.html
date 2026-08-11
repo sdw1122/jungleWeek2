@@ -7,14 +7,20 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/back-nav.css">
   <link rel="stylesheet" href="../css/my-plants.css?v=1">
 </head>
 <body>
+  <a class="back-to-dashboard" href="dashboard-v2.html">← 식물 키우기로 돌아가기</a>
   <main class="plants-dashboard">
-    <header>
-      <div><a href="welcome.html">🌱 Farmda</a><p>MY GREEN SPACE</p><h1>내가 키우고 있는 식물</h1><span>함께 자라고 있는 식물들의 상태를 확인해보세요.</span></div>
+    <section class="plants-intro">
+      <p>MY GREEN SPACE</p>
+      <h1>내가 키우고 있는 식물</h1>
+      <span>함께 자라고 있는 식물들의 상태를 확인해보세요.</span>
+    </section>
+    <div class="plants-toolbar">
       <a class="add-plant" href="plant-select.html">＋ 새로운 식물 키우기</a>
-    </header>
+    </div>
     <section class="summary" aria-label="식물 요약">
       <div><small>함께하는 식물</small><strong id="plant-count">0</strong></div>
       <div><small>오늘 돌봄 필요</small><strong id="care-count">0</strong></div>

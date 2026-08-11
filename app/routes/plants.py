@@ -64,20 +64,48 @@ def create_plant():
         return error
 
     name = " ".join(str(body.get("name", "")).split()).strip()
-    image_url = str(body.get("imageUrl", "")).strip()
+    species_name = " ".join(
+        str(body.get("speciesName", name)).split()
+    ).strip()
+    category = str(body.get("category", "")).strip() or None
+    emoji = str(body.get("emoji", "")).strip() or None
+    image_url = str(body.get("imageUrl", "")).strip() or None
     fields = {}
     if not 1 <= len(name) <= 50:
         fields["name"] = "식물 이름은 1자 이상 50자 이하로 입력해 주세요."
-    if len(image_url) > 2000 or not image_url.startswith(("https://", "http://")):
+    if not 1 <= len(species_name) <= 50:
+        fields["speciesName"] = "식물 종류 이름을 확인해 주세요."
+    if category and len(category) > 30:
+        fields["category"] = "식물 분류는 30자 이하로 입력해 주세요."
+    if emoji and len(emoji) > 16:
+        fields["emoji"] = "식물 이모지는 16자 이하로 입력해 주세요."
+    if image_url and (
+        len(image_url) > 2000
+        or not image_url.startswith(("https://", "http://"))
+    ):
         fields["imageUrl"] = "올바른 식물 이미지 주소가 필요합니다."
+    if not image_url and not emoji:
+        fields["plantVisual"] = "식물 이미지 또는 이모지가 필요합니다."
     if fields:
         return api_error("VALIDATION_ERROR", "입력값을 확인해 주세요.", 400, fields)
 
-    species = PlantSpecies.query.filter_by(image_url=image_url).first()
+    species = PlantSpecies.query.filter_by(name=species_name).first()
     if not species:
-        species = PlantSpecies(image_url=image_url)
+        species = PlantSpecies(
+            name=species_name,
+            category=category,
+            emoji=emoji,
+            image_url=image_url,
+        )
         db.session.add(species)
         db.session.flush()
+    else:
+        if category:
+            species.category = category
+        if emoji:
+            species.emoji = emoji
+        if image_url:
+            species.image_url = image_url
 
     plant = Plant(
         species_id=species.id,
