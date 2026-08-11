@@ -5,7 +5,7 @@ from .extensions import db
 
 
 def create_app() -> Flask:
-    app = Flask(__name__)
+    app = Flask(__name__, static_url_path="")
     app.config.from_object(Config)
 
     db.init_app(app)
