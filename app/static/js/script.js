@@ -84,11 +84,11 @@ loginForm.addEventListener('submit', async event => {
       })
     });
     csrfToken = payload.data.csrfToken;
-    showToast('로그인되었습니다. Farmda 홈으로 이동합니다.');
+    showToast('로그인되었습니다. Farmda에 오신 것을 환영해요.');
     const next = new URLSearchParams(location.search).get('next');
     const destination = next && next.startsWith('/') && !next.startsWith('//')
       ? next
-      : '/main.html';
+      : '/welcome.html';
     window.setTimeout(() => { location.href = destination; }, 450);
   } catch (error) {
     showToast(error.message, true);

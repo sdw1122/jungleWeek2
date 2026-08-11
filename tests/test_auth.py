@@ -83,7 +83,7 @@ class AuthApiTestCase(unittest.TestCase):
         me_response = self.client.get("/api/v1/auth/me")
         self.assertEqual(me_response.status_code, 200)
         self.assertEqual(me_response.get_json()["data"]["user"]["nickname"], "초록이")
-        self.assertEqual(self.client.get("/main.html").status_code, 200)
+        self.assertEqual(self.client.get("/welcome.html").status_code, 200)
 
         csrf_token = login_response.get_json()["data"]["csrfToken"]
         logout_response = self.client.post(

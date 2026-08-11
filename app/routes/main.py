@@ -20,7 +20,7 @@ main_bp = Blueprint("main", __name__)
 @main_bp.get("/")
 def index():
     if current_user.is_authenticated:
-        return redirect(url_for("main.frontend_page", page="main"))
+        return redirect(url_for("main.frontend_page", page="welcome"))
     return render_template("index.html")
 
 
@@ -28,10 +28,11 @@ def index():
 def frontend_page(page: str):
     """Serve the migrated Farmda screens from the Flask template folder."""
     allowed_pages = {
-        "main",
+        "welcome",
         "diary",
         "dictionary",
         "plant-select",
+        "my-plants",
         "dashboard",
         "dashboard-v2",
         "legacy-wireframe",
@@ -57,10 +58,8 @@ def legacy_js(filename: str):
 @main_bp.get("/login.html")
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for("main.frontend_page", page="main"))
+        return redirect(url_for("main.frontend_page", page="welcome"))
     return render_template("login.html")
-
-
 @main_bp.get("/health")
 def health():
     try:

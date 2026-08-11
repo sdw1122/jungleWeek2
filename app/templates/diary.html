@@ -7,14 +7,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/diary-redesign.css?v=2">
+  <link rel="stylesheet" href="../css/diary-redesign.css?v=2"><link rel="stylesheet" href="../css/diary-tall.css?v=3"><link rel="stylesheet" href="../css/diary-wide.css?v=4">
 </head>
 <body>
-  <header class="global-nav"><a class="brand" href="main.html">🌱 Farmda</a><nav><a class="active" href="diary.html">성장일기</a><a href="main.html#shop">재배용품</a><a href="dictionary.html">식물백과</a><a href="plant-select.html">기념일</a><a href="main.html#community">커뮤니티</a></nav><span class="profile">F</span></header>
+  <header class="global-nav"><a class="brand" href="welcome.html">🌱 Farmda</a><nav><a class="active" href="diary.html">성장일기</a><a href="dictionary.html">식물백과</a><a href="my-plants.html">키우기</a><a href="#" aria-disabled="true">커뮤니티</a></nav><span class="profile">F</span></header>
   <main class="diary-content">
     <header class="content-header"><div><p id="selected-date-label">오늘의 기록</p><h1 id="entry-title">오늘, 나는 조금 더 자랐어요</h1></div><button class="new-entry" type="button">＋ 기록 남기기</button></header>
 
     <section class="today-layout">
+      <aside class="calendar-panel"><div class="calendar-title"><p>GROWTH CALENDAR</p><h2>성장 달력</h2></div><div class="plant-mini"><span>🪴</span><div><strong>몬스테라</strong><small>함께한 지 24일째</small></div></div><div class="month-nav"><button id="prev-month" aria-label="이전 달">‹</button><h3 id="month-title"></h3><button id="next-month" aria-label="다음 달">›</button></div><div class="weekdays"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div><div class="calendar-grid" id="calendar"></div><div class="calendar-legend"><span><i class="happy"></i>행복한 날</span><span><i class="sad-dot"></i>속상한 날</span></div><div class="calendar-note"><span>🌱</span><p><strong>이번 달 12번 기록했어요</strong><small>꾸준한 관심으로 잘 자라고 있어요.</small></p></div></aside>
       <article class="paper-diary">
         <header class="paper-meta"><div><span>날짜 :</span><strong id="entry-date"></strong></div><div class="weather-choice"><span>날씨 :</span><b class="selected">☀️</b><b>☁️</b><b>❄️</b><b>☂️</b></div></header>
         <div class="paper-title"><span>제목 :</span><strong>햇빛을 듬뿍 받은 행복한 하루</strong></div>
