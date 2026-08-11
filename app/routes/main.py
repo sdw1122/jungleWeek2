@@ -24,6 +24,7 @@ def frontend_page(page: str):
         "dashboard",
         "dashboard-v2",
         "legacy-wireframe",
+        "guestbook",
     }
     if page not in allowed_pages:
         return jsonify(status="error", message="page not found"), 404

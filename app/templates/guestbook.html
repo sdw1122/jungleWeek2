@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Farmda - 방명록</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/back-nav.css" />
+    <link rel="stylesheet" href="../css/guestbook.css" />
+  </head>
+  <body>
+    <a class="back-to-dashboard" href="dashboard-v2.html">← 식물 키우기로 돌아가기</a>
+
+    <main class="guestbook-main">
+      <section class="guestbook-intro">
+        <p>FARMDA GUESTBOOK</p>
+        <h1>방명록</h1>
+        <span>Farmda 식구들에게 짧은 인사말을 남겨보세요.</span>
+      </section>
+
+      <div class="guestbook-toolbar">
+        <span class="entry-count" id="entry-count"></span>
+        <button class="write-btn" id="open-write" type="button">＋ 방명록 작성</button>
+      </div>
+
+      <section class="entry-list" id="entry-list"></section>
+      <p class="guestbook-empty" id="guestbook-empty" hidden>
+        아직 방명록이 없어요. 첫 인사말을 남겨보세요!
+      </p>
+    </main>
+
+    <div class="write-overlay" id="write-overlay" hidden>
+      <div class="write-panel">
+        <button class="write-close" id="write-close" aria-label="닫기">×</button>
+        <h2>방명록 작성</h2>
+        <form id="write-form">
+          <label
+            >인사말
+            <textarea
+              id="write-content"
+              rows="4"
+              placeholder="따뜻한 인사말을 남겨주세요"
+              maxlength="200"
+              required
+            ></textarea
+          ></label>
+          <div class="write-actions">
+            <button type="button" class="cancel-btn" id="write-cancel">취소</button>
+            <button type="submit" class="submit-btn">남기기</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="../js/guestbook.js"></script>
+  </body>
+</html>
