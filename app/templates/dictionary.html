@@ -10,15 +10,15 @@
       href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="../css/dictionary.css" />
+    <link rel="stylesheet" href="../css/dictionary.css" /><link rel="stylesheet" href="../css/dictionary-categories.css?v=2" />
   </head>
   <body>
     <link rel="stylesheet" href="../css/plant-nav.css" />
     <header class="farmda-nav">
       <a class="farmda-brand" href="main.html">🌱 Farmda</a>
       <nav>
-        <a href="main.html#diary">성장일기</a
-        ><a href="main.html#shop">재배용품</a
+        <a href="diary.html">성장일기</a
+        ><a href="shop.html">재배용품</a
         ><a class="active" href="dictionary.html">식물백과</a
         ><a href="plant-select.html">기념일</a
         ><a href="main.html#community">커뮤니티</a>
@@ -34,16 +34,6 @@
           있어요.</span
         >
       </section>
-      <nav class="dict-filters" aria-label="식물 카테고리 필터">
-        <button class="dict-filter active" data-filter="all">전체</button>
-        <button class="dict-filter" data-filter="foliage">관엽식물</button>
-        <button class="dict-filter" data-filter="palm">야자·열대식물</button>
-        <button class="dict-filter" data-filter="succulent">
-          다육·건조식물
-        </button>
-        <button class="dict-filter" data-filter="flower">꽃·무늬식물</button>
-        <button class="dict-filter" data-filter="etc">기타</button>
-      </nav>
       <label class="dict-search"
         ><span>⌕</span
         ><input
@@ -51,6 +41,14 @@
           type="search"
           placeholder="식물 이름으로 검색해보세요"
       /></label>
+      <nav class="dict-filters" aria-label="식물 카테고리 필터">
+        <button class="dict-filter active" data-filter="all"><i>⌘</i><span>전체</span></button>
+        <button class="dict-filter" data-filter="foliage"><i>🌿</i><span>관엽식물</span></button>
+        <button class="dict-filter" data-filter="palm"><i>🌴</i><span>야자·열대식물</span></button>
+        <button class="dict-filter" data-filter="succulent"><i>🌵</i><span>다육·건조식물</span></button>
+        <button class="dict-filter" data-filter="flower"><i>🌸</i><span>꽃·무늬식물</span></button>
+        <button class="dict-filter" data-filter="etc"><i>🍀</i><span>기타</span></button>
+      </nav>
       <section class="dict-grid" id="dict-grid"></section>
       <p class="dict-empty" id="dict-empty" hidden>검색 결과가 없습니다.</p>
     </main>
