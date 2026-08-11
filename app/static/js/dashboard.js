@@ -10,6 +10,38 @@ const chatForm = document.querySelector('#chat-form');
 const chatInput = document.querySelector('#chat-input');
 const actionButtons = document.querySelectorAll('[data-action]');
 const prefixPattern = /^(사랑을 담은|행운의|감사의|건강을 기원하는|싱그러운|우리의|존경의|사랑의)\s*/;
+const seedStyles = {
+  '몬스테라': 'monstera', '스투키': 'stucky', '산세베리아': 'sansevieria',
+  '스킨답서스': 'pothos', '아레카야자': 'areca', '파키라': 'pachira',
+  '고무나무': 'rubber', '스파티필름': 'peace-lily', '아이비': 'ivy',
+  '필로덴드론': 'philodendron', '테이블야자': 'parlor-palm', '알로에': 'aloe',
+  '선인장': 'cactus', '페페로미아': 'peperomia', '행운목': 'lucky-bamboo',
+  '벤자민고무나무': 'ficus', '칼라데아': 'calathea', '드라세나': 'dracaena',
+  '호야': 'hoya', '아디안텀': 'maidenhair'
+};
+const stageStyles = { '씨앗': 'seed', '떡잎': 'sprout', '본잎': 'leaf', '봉오리': 'bud', '꽃': 'mature' };
+
+function plantModelMarkup() {
+  return '<span class="plant-model"><span class="plant-trunk"></span><span class="plant-pot"></span>'
+    + Array.from({ length: 8 }, (_, index) => `<i class="plant-leaf leaf-${index + 1}"></i>`).join('')
+    + '<i class="plant-bud"></i>'
+    + Array.from({ length: 5 }, (_, index) => `<i class="plant-bloom bloom-${index + 1}"></i>`).join('')
+    + '</span>';
+}
+
+function applyGrowthVisual(element, seedStyle, stageStyle, isNegative) {
+  const baseClass = element.id === 'mini-stage' ? 'mini-seed' : 'stage-plant';
+  element.className = baseClass;
+  element.classList.add('species-growth', `seed-${seedStyle}`, `growth-${stageStyle}`);
+  if (stageStyle === 'seed') {
+    element.classList.add('species-seed');
+    element.replaceChildren();
+  } else {
+    element.classList.add('has-model');
+    element.innerHTML = plantModelMarkup();
+  }
+  if (isNegative) element.classList.add('is-wilted');
+}
 
 const stages = [
   { min: 0, name: '씨앗', emoji: '🌰', next: 5, mood: '아직 싹을 틔우기 전입니다. 정성껏 돌봐주세요!' },
@@ -64,7 +96,9 @@ function renderGrowth(animate = false) {
   const stage = [...stages].reverse().find(item => total >= item.min);
   const plantName = chosen.name.replace(prefixPattern, '');
   const isNegative = chosen.negativeEnergy > chosen.positiveEnergy;
-  const stageEmoji = isNegative ? '🥀' : stage.emoji;
+  const seedStyle = seedStyles[plantName] || 'monstera';
+  const stageStyle = stageStyles[stage.name];
+  const visualKey = `${seedStyle}-${stageStyle}-${isNegative ? 'wilted' : 'healthy'}`;
 
   document.querySelector('#plant-name').textContent = plantName;
   document.querySelector('.plant-chip h2').textContent = plantName;
@@ -76,15 +110,17 @@ function renderGrowth(animate = false) {
   document.querySelector('#total-bar').style.width = `${total}%`;
   document.querySelector('#next').textContent = total >= 100 ? '완료' : Math.max(0, stage.next - total);
   document.querySelector('#stage-label').textContent = `${isNegative ? `흑화(${stage.name})` : stage.name} 단계`;
-  document.querySelector('#mini-stage').textContent = stageEmoji;
+  const miniStage = document.querySelector('#mini-stage');
+  applyGrowthVisual(miniStage, seedStyle, stageStyle, isNegative);
   document.querySelector('#mood-copy').textContent = lastAiEmotion
     ? `현재 기분: ${lastAiEmotion}`
     : (isNegative ? '관심이 조금 부족해요. 따뜻하게 돌봐주세요.' : stage.mood);
 
   seedActions.hidden = total >= 5;
   chatForm.hidden = total < 5;
-  if (stagePlant.textContent !== stageEmoji) {
-    stagePlant.textContent = stageEmoji;
+  if (stagePlant.dataset.visual !== visualKey) {
+    stagePlant.dataset.visual = visualKey;
+    applyGrowthVisual(stagePlant, seedStyle, stageStyle, isNegative);
     if (animate) {
       stagePlant.animate(
         [{ transform: 'scale(.5) rotate(-12deg)', opacity: .2 }, { transform: 'scale(1.2) rotate(5deg)', opacity: 1 }, { transform: 'scale(1)' }],
@@ -216,5 +252,39 @@ document.querySelector('.growth-modal-backdrop').addEventListener('click', close
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && !growthModal.hidden) closeGrowthModal();
 });
+
+const giftForm = document.querySelector('#gift-form');
+const giftNickname = document.querySelector('#gift-nickname');
+const giftMessage = document.querySelector('#gift-message');
+const giftMessageCount = document.querySelector('#gift-message-count');
+const giftError = document.querySelector('#gift-error');
+giftMessage.addEventListener('input', () => {
+  giftMessageCount.textContent = giftMessage.value.length;
+});
+giftNickname.addEventListener('input', () => {
+  giftError.textContent = '';
+});
+giftForm.addEventListener('submit', event => {
+  event.preventDefault();
+  const nickname = giftNickname.value.trim();
+  const message = giftMessage.value.trim();
+  if (nickname.length < 2) {
+    giftError.textContent = '닉네임을 2자 이상 입력해주세요.';
+    giftNickname.focus();
+    return;
+  }
+  const submitButton = giftForm.querySelector('.gift-submit');
+  submitButton.disabled = true;
+  submitButton.querySelector('b').textContent = '선물 카드를 만드는 중…';
+  window.setTimeout(() => {
+    document.querySelector('#gift-recipient').textContent = nickname;
+    document.querySelector('#gift-plant-name').textContent = chosen?.name || '식물';
+    document.querySelector('#gift-plant-icon').textContent = chosen?.emoji || '🪴';
+    document.querySelector('#gift-sent-message').textContent = message;
+    document.querySelector('#gift-form-view').hidden = true;
+    document.querySelector('#gift-success').hidden = false;
+  }, 450);
+});
+document.querySelector('.gift-done').addEventListener('click', closeGrowthModal);
 
 loadPlant();

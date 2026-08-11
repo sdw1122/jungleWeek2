@@ -1,0 +1,14 @@
+/* Peperomia: keep the mature plant as foliage only. */
+.seed-peperomia.growth-mature .plant-bloom,.seed-peperomia.growth-mature .plant-bud{display:none!important}
+.seed-peperomia.growth-mature .plant-model:after{display:none!important}
+
+/* Aloe: upright young leaves and flower stalks rooted inside the pot. */
+.seed-aloe.growth-sprout .leaf-1{transform:translateX(-29px) rotate(-6deg)!important}.seed-aloe.growth-sprout .leaf-2{transform:translateX(-7px) rotate(6deg)!important}
+.seed-aloe.growth-bud .plant-bud{display:block;z-index:4;left:111px;top:28px;width:8px;height:151px;border-radius:6px;background:linear-gradient(90deg,#497d49,#7da65a 52%,#416e41);transform:none;box-shadow:none}
+.seed-aloe.growth-bud .plant-bud:after{content:"";position:absolute;left:-7px;top:-20px;width:22px;height:66px;border-radius:55% 55% 35% 35%;background:radial-gradient(ellipse at 30% 9%,#dce78d 0 6%,transparent 7%),radial-gradient(ellipse at 69% 17%,#eef0a1 0 7%,transparent 8%),radial-gradient(ellipse at 28% 28%,#cbdc78 0 7%,transparent 8%),radial-gradient(ellipse at 70% 38%,#e6e994 0 7%,transparent 8%),radial-gradient(ellipse at 30% 48%,#d4e17f 0 7%,transparent 8%),radial-gradient(ellipse at 69% 59%,#edf0a0 0 7%,transparent 8%),radial-gradient(ellipse at 31% 70%,#cbdc76 0 7%,transparent 8%),radial-gradient(ellipse at 67% 82%,#e5e991 0 7%,transparent 8%);filter:drop-shadow(0 2px 3px rgba(63,80,42,.14))}
+/* Five slim spikes, each with many small orange tubular flowers like the reference aloe. */
+.seed-aloe.growth-mature .plant-bloom{display:block;z-index:4;width:7px;border-radius:5px;clip-path:none;background:linear-gradient(90deg,#477948,#78a158 55%,#416f42);box-shadow:none;transform-origin:bottom center}
+.seed-aloe.growth-mature .plant-bloom:after{content:"";position:absolute;left:-6px;top:-3px;width:19px;height:68px;border-radius:60% 60% 30% 30%;clip-path:polygon(50% 0,78% 8%,92% 100%,8% 100%,22% 8%);background:radial-gradient(ellipse,#ffbf64 0 24%,#dc6d2f 27% 62%,transparent 65%) 0 0/9px 9px repeat;filter:drop-shadow(0 2px 3px rgba(108,53,26,.2))}
+.seed-aloe.growth-mature .bloom-1{left:111px;top:0;height:180px;transform:none}.seed-aloe.growth-mature .bloom-2{left:84px;top:24px;height:156px;transform:rotate(-5deg) scale(.88)}.seed-aloe.growth-mature .bloom-3{left:138px;top:19px;height:161px;transform:rotate(5deg) scale(.9)}.seed-aloe.growth-mature .bloom-4{left:66px;top:51px;height:129px;transform:rotate(-8deg) scale(.76)}.seed-aloe.growth-mature .bloom-5{left:157px;top:47px;height:133px;transform:rotate(8deg) scale(.78)}
+.seed-aloe.growth-mature .plant-model:after{display:none!important}
+.mini-seed.seed-aloe.has-model .plant-model,.mini-seed.seed-peperomia.has-model .plant-model{margin:-115px 0 0 -115px;transform:scale(.27)!important}
