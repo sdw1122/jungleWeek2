@@ -1,44 +1,305 @@
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:"Noto Sans KR",sans-serif;color:#101a12;background:#fff}button{font:inherit}
-
-.guestbook-intro{text-align:center;margin:20px auto 40px;max-width:900px;padding:0 28px}
-.guestbook-intro p{font-size:11px;font-weight:800;letter-spacing:.18em;color:#d46f2c;margin:0}
-.guestbook-intro h1{font-size:clamp(32px,4vw,54px);letter-spacing:-.05em;margin:12px 0}
-.guestbook-intro span{color:#647067;font-size:16px}
-
-.guestbook-main{max-width:760px;margin:auto;padding:0 28px 120px}
-.guestbook-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.entry-count{color:#647067;font-size:14px;font-weight:600}
-.write-btn{border:0;border-radius:14px;background:#173e28;color:#fff;padding:13px 22px;font-weight:800;font-size:14px;cursor:pointer;transition:.2s}
-.write-btn:hover{background:#0a8f46}
-
-.entry-list{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-.entry-card{border:1px solid #e9ece8;border-radius:18px;padding:22px}
-.entry-card-meta{display:flex;align-items:center;gap:10px;color:#8a938b;font-size:13px;margin-bottom:10px}
-.entry-author{font-weight:800;color:#3b463d}
-.entry-delete{margin-left:auto;border:0;background:none;font-size:18px;line-height:1;color:#b8c0b9;cursor:pointer;padding:2px 4px}
-.entry-delete:hover{color:#c0392b}
-.entry-content{margin:0;font-size:15px;line-height:1.7;color:#25302a;white-space:pre-wrap}
-
-.guestbook-empty{text-align:center;color:#888;padding:60px 0}
-.guestbook-empty[hidden]{display:none}
-
-.write-overlay{position:fixed;inset:0;z-index:50;background:rgba(16,26,18,.55);display:flex;align-items:center;justify-content:center;padding:20px}
-.write-overlay[hidden]{display:none}
-.write-panel{position:relative;width:min(480px,100%);max-height:90vh;overflow-y:auto;background:#fff;border-radius:26px;padding:38px 34px 30px;box-shadow:0 30px 70px rgba(10,20,12,.3)}
-.write-panel h2{margin:0 0 24px;font-size:22px;letter-spacing:-.03em}
-.write-close{position:absolute;right:20px;top:16px;border:0;background:none;font-size:28px;line-height:1;cursor:pointer;color:#647067}
-#write-form{display:flex;flex-direction:column;gap:18px}
-#write-form label{display:flex;flex-direction:column;gap:8px;font-size:13px;font-weight:800;color:#3b463d}
-#write-form textarea{border:1px solid #e0e4df;border-radius:12px;padding:12px 14px;font:inherit;font-size:14px;color:#101a12;resize:vertical}
-#write-form textarea:focus{outline:0;border-color:#173e28}
-.write-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px}
-.cancel-btn{border:1px solid #ced5cf;background:#fff;color:#465047;border-radius:12px;padding:11px 20px;font-weight:700;cursor:pointer}
-.submit-btn{border:0;background:#173e28;color:#fff;border-radius:12px;padding:11px 24px;font-weight:800;cursor:pointer}
-.submit-btn:hover{background:#0a8f46}
-
-@media(max-width:640px){
-  .entry-list{grid-template-columns:1fr}
-  .guestbook-toolbar{flex-direction:column;align-items:stretch;gap:12px}
-  .write-btn{width:100%}
-  .write-panel{padding:30px 22px 24px}
+* {
+  box-sizing: border-box;
 }
+html, body {
+  margin: 0;
+  min-height: 100%;
+  font-family: "Noto Sans KR", -apple-system, sans-serif;
+  color: #101a12;
+  background: #f7f9f7;
+}
+button {
+  font: inherit;
+}
+
+.guestbook-main {
+  max-width: 800px;
+  margin: auto;
+  padding: 40px 28px 120px;
+}
+
+.guestbook-intro {
+  text-align: center;
+  margin: 20px auto 50px;
+}
+.guestbook-intro p {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .2em;
+  color: #27ae60;
+  margin: 0;
+  text-transform: uppercase;
+}
+.guestbook-intro h1 {
+  font-size: clamp(36px, 5vw, 64px);
+  letter-spacing: -.05em;
+  margin: 16px 0;
+  font-weight: 900;
+  color: #1e272e;
+}
+.guestbook-intro span {
+  color: #808e9b;
+  font-size: 18px;
+}
+
+.guestbook-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  background: #fff;
+  padding: 16px 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+}
+.entry-count {
+  color: #485460;
+  font-size: 16px;
+  font-weight: 700;
+}
+.write-btn {
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #173e28, #27ae60);
+  color: #fff;
+  padding: 14px 28px;
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+}
+.write-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
+  background: linear-gradient(135deg, #133220, #219653);
+}
+
+.entry-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+.entry-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.entry-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+}
+.entry-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #808e9b;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+.entry-author {
+  font-weight: 800;
+  color: #1e272e;
+  font-size: 16px;
+  background: #eaf1ed;
+  padding: 4px 12px;
+  border-radius: 8px;
+}
+.entry-content {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.8;
+  color: #3d4a41;
+  white-space: pre-wrap;
+}
+
+.guestbook-empty {
+  text-align: center;
+  color: #808e9b;
+  padding: 80px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+.guestbook-empty[hidden] {
+  display: none;
+}
+
+/* Glassmorphism Overlay */
+.write-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(16, 26, 18, 0.4);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 1;
+  visibility: visible;
+  transition: all 0.3s ease;
+}
+.write-overlay[hidden] {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.write-panel {
+  position: relative;
+  width: min(520px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 32px;
+  padding: 44px 40px;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.2);
+  transform: scale(1);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.write-overlay[hidden] .write-panel {
+  transform: scale(0.95) translateY(20px);
+}
+
+.write-panel h2 {
+  margin: 0 0 32px;
+  font-size: 28px;
+  font-weight: 900;
+  color: #1e272e;
+  letter-spacing: -0.03em;
+}
+.write-close {
+  position: absolute;
+  right: 24px;
+  top: 24px;
+  border: 0;
+  background: #f1f2f6;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  color: #485460;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.write-close:hover {
+  background: #dfe4ea;
+}
+#write-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+#write-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #3b463d;
+}
+#write-form textarea {
+  border: 2px solid #dfe4ea;
+  border-radius: 16px;
+  padding: 16px 20px;
+  font: inherit;
+  font-size: 16px;
+  color: #1e272e;
+  resize: vertical;
+  transition: all 0.2s ease;
+  background: #fbfdff;
+}
+#write-form textarea:focus {
+  outline: 0;
+  border-color: #27ae60;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.1);
+}
+.write-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+}
+.cancel-btn {
+  border: 2px solid #dfe4ea;
+  background: transparent;
+  color: #485460;
+  border-radius: 12px;
+  padding: 14px 28px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.cancel-btn:hover {
+  background: #f1f2f6;
+  color: #1e272e;
+}
+.submit-btn {
+  border: 0;
+  background: linear-gradient(135deg, #173e28, #27ae60);
+  color: #fff;
+  border-radius: 12px;
+  padding: 14px 32px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+}
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(39, 174, 96, 0.4);
+}
+
+@media(max-width:768px){
+  .entry-list{grid-template-columns:1fr;}
+  .guestbook-toolbar{flex-direction:column;align-items:stretch;gap:16px;}
+  .write-btn{width:100%;}
+  .write-panel{padding:32px 24px;border-radius:24px;}
+}
+/* Additional CSS for edit/delete buttons appended to the beautiful CSS */
+
+.entry-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #808e9b;
+  font-size: 14px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.entry-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+.action-btn {
+  background: transparent;
+  border: 1px solid #dfe4ea;
+  border-radius: 8px;
+  color: #808e9b;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.action-btn:hover {
+  background: #f1f2f6;
+  color: #1e272e;
+}
+.action-btn.delete-btn:hover {
+  background: #ffeaa7;
+  color: #d63031;
+  border-color: #fab1a0;
+}
+

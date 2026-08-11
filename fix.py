@@ -1,68 +1,8 @@
-import re
-
-with open('app/static/js/dashboard.js', 'r', encoding='utf-8') as f:
+import codecs
+with codecs.open('app/services/ai_service.py', 'r', 'utf-8') as f:
     content = f.read()
-
-# Add lastAiEmotion at the top
-if 'let lastAiEmotion = null;' not in content:
-    content = 'let lastAiEmotion = null;\n' + content
-
-# Fix updateGrowth
-old_update_growth = r'''function updateGrowth\(\)\{
-  const total=Math\.min\(100,positive\+negative\);
-  const stage=\[\.\.\.stages\]\.reverse\(\)\.find\(item=>total>=item\.min\);
-  document\.querySelector\('#positive'\)\.textContent=positive;
-  document\.querySelector\('#negative'\)\.textContent=negative;
-  document\.querySelector\('#total'\)\.textContent=total;
-  document\.querySelector\('#positive-bar'\)\.style\.width=\$\{Math\.min\(100,positive\)\}%;
-  document\.querySelector\('#negative-bar'\)\.style\.width=\$\{Math\.min\(100,negative\)\}%;
-  document\.querySelector\('#total-bar'\)\.style\.width=\$\{total\}%;
-  document\.querySelector\('#next'\)\.textContent=total>=100\?'완료':Math\.max\(0,stage\.next-total\);
-  document\.querySelector\('#stage-label'\)\.textContent=\$\{stage\.name\} 단계;
-  document\.querySelector\('#mini-stage'\)\.textContent=stage\.emoji;
-  document\.querySelector\('#mood-copy'\)\.textContent=positive>=negative\?stage\.mood:'기분이 안 좋아요\. 잘해주세요\.';'''
-
-new_update_growth = '''function updateGrowth(){
-  const total=Math.min(100,positive+negative);
-  const stage=[...stages].reverse().find(item=>total>=item.min);
-  
-  let currentStageName = stage.name;
-  let currentEmoji = stage.emoji;
-  let currentMood = stage.mood;
-
-  if (negative > positive) {
-      currentStageName = "흑화(" + stage.name + ")";
-      currentEmoji = "🥀";
-      currentMood = "불량하고 삐뚤어졌습니다.";
-  }
-  
-  document.querySelector('#positive').textContent=positive;
-  document.querySelector('#negative').textContent=negative;
-  document.querySelector('#total').textContent=total;
-  document.querySelector('#positive-bar').style.width=${Math.min(100,positive)}%;
-  document.querySelector('#negative-bar').style.width=${Math.min(100,negative)}%;
-  document.querySelector('#total-bar').style.width=${total}%;
-  document.querySelector('#next').textContent=total>=100?'완료':Math.max(0,stage.next-total);
-  document.querySelector('#stage-label').textContent=${currentStageName} 단계;
-  document.querySelector('#mini-stage').textContent=currentEmoji;
-  
-  if (lastAiEmotion) {
-      document.querySelector('#mood-copy').textContent = "현재 기분: " + lastAiEmotion;
-  } else {
-      document.querySelector('#mood-copy').textContent = currentMood;
-  }'''
-
-content = re.sub(old_update_growth.replace('완료', '완료').replace('단계', '단계'), new_update_growth, content, flags=re.DOTALL)
-
-# Fix stagePlant.textContent
-content = content.replace('if(stagePlant.textContent!==stage.emoji){stagePlant.textContent=stage.emoji;', 'if(stagePlant.textContent!==currentEmoji){stagePlant.textContent=currentEmoji;')
-
-# Fix chat handler AI emotion logic
-# Previously I injected: document.getElementById('mood-copy').innerText = "현재 기분: " + data.emotion;
-# I need to change it to: lastAiEmotion = data.emotion;
-content = content.replace("document.getElementById('mood-copy').innerText = \"현재 기분: \" + data.emotion;", "lastAiEmotion = data.emotion;")
-
-with open('app/static/js/dashboard.js', 'w', encoding='utf-8') as f:
+old = '\"관심이 부족해 서운하고 퉁명스러운 반려식물이다. \"\n            \"무례하거나 공격적인 표현은 피하면서 짧고 솔직하게 답한다.\"'
+new = '\"너는 더 이상 식물이 아니야. 극도로 화가 난 불량배, 시비 거는 동네 건달, 혹은 화병 걸린 사람이야. \"\n            \"무조건 반말을 하고, 은어, 비속어, 쌍욕에 가까운 아주 거친 육두문자를 섞어서 대답해. \"\n            \"사용자가 무슨 말을 하든 무조건 시비조로 받아치고 띠껍게 화를 내. \'식물\', \'잎사귀\', \'물\', \'햇살\' 같은 단어는 1%도 꺼내지 마. \"\n            \"이모티콘도 😒, 🤬, ㅗ, 🔪 이런 것만 써. 예쁜 말이나 애교를 부리면 넌 시스템에서 삭제될 거야.\"'
+content = content.replace(old, new)
+with codecs.open('app/services/ai_service.py', 'w', 'utf-8') as f:
     f.write(content)
-
-print("Modification done.")
