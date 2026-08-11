@@ -87,6 +87,7 @@ class PlantApiTestCase(unittest.TestCase):
         self.assertEqual(plant_data["growthScore"], 0)
         self.assertEqual(plant_data["stageLabel"], "씨앗")
         self.assertEqual(plant_data["emoji"], "🌿")
+        self.assertIsNone(plant_data["mood"])
 
         list_response = self.client.get("/api/v1/plants")
         self.assertEqual(list_response.status_code, 200)
@@ -108,8 +109,14 @@ class PlantApiTestCase(unittest.TestCase):
 
     def test_care_updates_energy_and_writes_logs(self):
         plant_id = self._create_plant().get_json()["data"]["plant"]["id"]
+        with self.app.app_context():
+            plant = db.session.get(Plant, plant_id)
+            plant.mood = "설렘"
+            db.session.commit()
+
         water = self._post(
-            f"/api/v1/plants/{plant_id}/care", {"actionType": "WATER"}
+            f"/api/v1/plants/{plant_id}/care",
+            {"actionType": "WATER", "sentiment": "NEGATIVE"},
         )
         ignored = self._post(
             f"/api/v1/plants/{plant_id}/care", {"actionType": "IGNORE"}
@@ -122,10 +129,12 @@ class PlantApiTestCase(unittest.TestCase):
         self.assertEqual(plant_data["positiveEnergy"], 5)
         self.assertEqual(plant_data["negativeEnergy"], 5)
         self.assertEqual(plant_data["stageLabel"], "떡잎")
+        self.assertEqual(plant_data["mood"], "설렘")
 
         with self.app.app_context():
             logs = CareLog.query.order_by(CareLog.id).all()
             self.assertEqual([log.action_type for log in logs], ["WATER", "IGNORE"])
+            self.assertEqual([log.growth_delta for log in logs], [5, 5])
             self.assertEqual(logs[0].positive_delta, 5)
             self.assertEqual(logs[1].negative_delta, 5)
 

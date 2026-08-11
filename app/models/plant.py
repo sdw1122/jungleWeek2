@@ -164,7 +164,7 @@ class CareLog(db.Model):
     __tablename__ = "care_logs"
     __table_args__ = (
         CheckConstraint(
-            "action_type IN ('PRAISE', 'PET', 'WATER', 'SUNLIGHT', 'IGNORE')",
+            "action_type IN ('PET', 'WATER', 'SUNLIGHT', 'IGNORE')",
             name="chk_care_logs_action_type",
         ),
     )

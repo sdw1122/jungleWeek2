@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
 
 from ..extensions import db
-from ..models import ChatMessage, ChatSession, Plant, PlantOwnership
+from ..models import CareLog, ChatMessage, ChatSession, Plant, PlantOwnership
 from ..services.ai_service import analyze_chat
 
 
@@ -74,11 +74,18 @@ def chat():
         {"role": item.role, "content": item.content}
         for item in reversed(past_messages)
     ]
+    latest_care = (
+        CareLog.query.filter_by(plant_id=plant.id)
+        .order_by(CareLog.created_at.desc(), CareLog.id.desc())
+        .first()
+    )
     ai_result = analyze_chat(
         message,
         history,
         plant.positive_energy,
         plant.negative_energy,
+        plant.growth_score,
+        latest_care.action_type if latest_care else None,
     )
 
     sentiment = str(ai_result.get("sentiment", "NEUTRAL")).upper()
@@ -86,15 +93,8 @@ def chat():
         sentiment = "NEUTRAL"
     response_text = str(ai_result.get("response", "잠시 후 다시 말해 주세요."))[:2000]
     emotion = str(ai_result.get("emotion", "평온"))[:30]
-    remaining = max(0, 100 - plant.growth_score)
-    positive_delta = min(
-        remaining,
-        max(0, int(ai_result.get("positive_delta", 0) or 0)),
-    )
-    negative_delta = min(
-        remaining - positive_delta,
-        max(0, int(ai_result.get("negative_delta", 0) or 0)),
-    )
+    positive_delta = min(5, max(0, int(ai_result.get("positive_delta", 0) or 0)))
+    negative_delta = min(5, max(0, int(ai_result.get("negative_delta", 0) or 0)))
 
     db.session.add(ChatMessage(session_id=session.id, role="USER", content=message))
     db.session.add(
@@ -109,19 +109,14 @@ def chat():
 
     plant.positive_energy += positive_delta
     plant.negative_energy += negative_delta
-    plant.growth_score = min(100, plant.positive_energy + plant.negative_energy)
-    plant.mood = (
-        "POSITIVE"
-        if plant.positive_energy >= plant.negative_energy
-        else "NEGATIVE"
-    )
-    if plant.growth_score >= 100:
-        plant.status = "GIFT_READY"
+    plant.mood = emotion
     db.session.commit()
 
     return jsonify(
         response=response_text,
         sentiment=sentiment,
         emotion=emotion,
+        positiveDelta=positive_delta,
+        negativeDelta=negative_delta,
         plant=plant.to_dict(ownership),
     )

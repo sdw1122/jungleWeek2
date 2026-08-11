@@ -77,11 +77,15 @@ function renderGrowth(animate = false) {
   document.querySelector('#next').textContent = total >= 100 ? '완료' : Math.max(0, stage.next - total);
   document.querySelector('#stage-label').textContent = `${isNegative ? `흑화(${stage.name})` : stage.name} 단계`;
   document.querySelector('#mini-stage').textContent = stageEmoji;
-  document.querySelector('#mood-copy').textContent = lastAiEmotion
-    ? `현재 기분: ${lastAiEmotion}`
+  const storedEmotion = ['POSITIVE', 'NEGATIVE'].includes(chosen.mood)
+    ? null
+    : chosen.mood;
+  const currentEmotion = lastAiEmotion || storedEmotion;
+  document.querySelector('#mood-copy').textContent = currentEmotion
+    ? `현재 기분: ${currentEmotion}`
     : (isNegative ? '관심이 조금 부족해요. 따뜻하게 돌봐주세요.' : stage.mood);
 
-  seedActions.hidden = total >= 5;
+  seedActions.hidden = false;
   chatForm.hidden = total < 5;
   if (stagePlant.textContent !== stageEmoji) {
     stagePlant.textContent = stageEmoji;

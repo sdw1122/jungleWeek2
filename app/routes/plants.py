@@ -8,7 +8,7 @@ from ..models import CareLog, Plant, PlantOwnership, PlantSpecies
 
 plants_bp = Blueprint("plants", __name__, url_prefix="/api/v1/plants")
 
-ACTION_TYPES = {"WATER", "SUNLIGHT", "PET", "PRAISE", "IGNORE"}
+ACTION_TYPES = {"WATER", "SUNLIGHT", "PET", "IGNORE"}
 
 
 def api_error(code: str, message: str, status: int, fields: dict | None = None):
@@ -113,7 +113,7 @@ def create_plant():
         growth_score=0,
         positive_energy=0,
         negative_energy=0,
-        mood="POSITIVE",
+        mood=None,
         status="GROWING",
     )
     db.session.add(plant)
@@ -151,12 +151,9 @@ def care_for_plant(plant_id: int):
         return error
 
     action_type = str(body.get("actionType", "")).strip().upper()
-    sentiment = str(body.get("sentiment", "POSITIVE")).strip().upper()
     note = str(body.get("note", "")).strip() or None
     if action_type not in ACTION_TYPES:
         return api_error("INVALID_ACTION", "지원하지 않는 돌봄 동작입니다.", 400)
-    if sentiment not in {"POSITIVE", "NEGATIVE"}:
-        return api_error("INVALID_SENTIMENT", "감정 분류를 확인해 주세요.", 400)
     if note and len(note) > 1000:
         return api_error("NOTE_TOO_LONG", "기록은 1000자 이하로 입력해 주세요.", 400)
 
@@ -168,15 +165,12 @@ def care_for_plant(plant_id: int):
         return api_error("PLANT_ALREADY_COMPLETE", "이미 성장을 완료한 식물입니다.", 409)
 
     previous_score = plant.growth_score
-    is_negative = action_type == "IGNORE" or sentiment == "NEGATIVE"
+    is_negative = action_type == "IGNORE"
     positive_delta = 0 if is_negative else 5
     negative_delta = 5 if is_negative else 0
+    plant.growth_score = min(100, plant.growth_score + 5)
     plant.positive_energy += positive_delta
     plant.negative_energy += negative_delta
-    plant.growth_score = min(100, plant.positive_energy + plant.negative_energy)
-    plant.mood = (
-        "POSITIVE" if plant.positive_energy >= plant.negative_energy else "NEGATIVE"
-    )
     if plant.growth_score >= 100:
         plant.status = "GIFT_READY"
 
