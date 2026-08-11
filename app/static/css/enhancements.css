@@ -49,6 +49,15 @@ form > label:not(.check) {
 }
 
 form > label:focus-within { border-color: #071108; }
+
+.submit:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+
+.toast.error {
+  background: #8b2531;
+}
 input { color: #111111; }
 input::placeholder { color: rgba(0, 0, 0, .45); }
 .check input { border-color: #111111; }

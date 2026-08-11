@@ -1,4 +1,13 @@
-from flask import Blueprint, jsonify, render_template, send_from_directory
+from flask import (
+    Blueprint,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    url_for,
+)
+from flask_login import current_user
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -10,6 +19,8 @@ main_bp = Blueprint("main", __name__)
 
 @main_bp.get("/")
 def index():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.frontend_page", page="main"))
     return render_template("index.html")
 
 
@@ -19,6 +30,7 @@ def frontend_page(page: str):
     allowed_pages = {
         "main",
         "diary",
+        "dictionary",
         "plant-select",
         "dashboard",
         "dashboard-v2",
@@ -26,6 +38,8 @@ def frontend_page(page: str):
     }
     if page not in allowed_pages:
         return jsonify(status="error", message="page not found"), 404
+    if page not in {"dictionary", "legacy-wireframe"} and not current_user.is_authenticated:
+        return redirect(url_for("main.login", next=request.path))
     return render_template(f"{page}.html")
 
 
@@ -42,32 +56,9 @@ def legacy_js(filename: str):
 
 @main_bp.get("/login.html")
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.frontend_page", page="main"))
     return render_template("login.html")
-
-
-@main_bp.get("/main.html")
-def main_page():
-    return render_template("main.html")
-
-
-@main_bp.get("/dictionary.html")
-def dictionary():
-    return render_template("dictionary.html")
-
-
-@main_bp.get("/plant-select.html")
-def plant_select():
-    return render_template("plant-select.html")
-
-
-@main_bp.get("/dashboard.html")
-def dashboard():
-    return render_template("dashboard.html")
-
-
-@main_bp.get("/dashboard-v2.html")
-def dashboard_v2():
-    return render_template("dashboard-v2.html")
 
 
 @main_bp.get("/health")
