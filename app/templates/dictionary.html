@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Farmda - 식물 백과사전</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/dictionary.css" /><link rel="stylesheet" href="../css/dictionary-categories.css?v=2" />
+    <link rel="stylesheet" href="../css/back-nav.css" />
+  </head>
+  <body>
+    <a class="back-to-dashboard" href="dashboard-v2.html">← 식물 키우기로 돌아가기</a>
+    <main>
+      <section class="dict-intro">
+        <p>PLANT ENCYCLOPEDIA</p>
+        <h1>식물 백과사전</h1>
+        <span
+          >카드를 클릭하면 물주기, 습도, 흙, 햇빛 등 재배 정보를 확인할 수
+          있어요.</span
+        >
+      </section>
+      <label class="dict-search"
+        ><span>⌕</span
+        ><input
+          id="dict-search"
+          type="search"
+          placeholder="식물 이름으로 검색해보세요"
+      /></label>
+      <nav class="dict-filters" aria-label="식물 카테고리 필터">
+        <button class="dict-filter active" data-filter="all"><i>⌘</i><span>전체</span></button>
+        <button class="dict-filter" data-filter="foliage"><i>🌿</i><span>관엽식물</span></button>
+        <button class="dict-filter" data-filter="palm"><i>🌴</i><span>야자·열대식물</span></button>
+        <button class="dict-filter" data-filter="succulent"><i>🌵</i><span>다육·건조식물</span></button>
+        <button class="dict-filter" data-filter="flower"><i>🌸</i><span>꽃·무늬식물</span></button>
+        <button class="dict-filter" data-filter="etc"><i>🍀</i><span>기타</span></button>
+      </nav>
+      <section class="dict-grid" id="dict-grid"></section>
+      <p class="dict-empty" id="dict-empty" hidden>검색 결과가 없습니다.</p>
+    </main>
+    <div class="dict-overlay" id="dict-overlay" hidden>
+      <div class="dict-panel">
+        <button class="dict-close" id="dict-close" aria-label="닫기">×</button>
+        <div class="dict-panel-head">
+          <span class="dict-emoji big" id="detail-emoji"></span>
+          <h2 id="detail-name"></h2>
+        </div>
+        <dl class="dict-info">
+          <div>
+            <dt>💧 물 주는 주기</dt>
+            <dd id="detail-water"></dd>
+          </div>
+          <div>
+            <dt>💦 습도</dt>
+            <dd id="detail-humidity"></dd>
+          </div>
+          <div>
+            <dt>🪴 흙</dt>
+            <dd id="detail-soil"></dd>
+          </div>
+          <div>
+            <dt>☀️ 햇빛</dt>
+            <dd id="detail-light"></dd>
+          </div>
+          <div>
+            <dt>✨ 기타 특징</dt>
+            <dd id="detail-etc"></dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+    <script src="../js/dictionary.js"></script>
+  </body>
+</html>

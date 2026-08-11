@@ -18,7 +18,6 @@ erDiagram
     PLANTS ||--o{ CHAT_SESSIONS : chats
     PLANTS ||--o{ DIARY_ENTRIES : journals
     PLANTS ||--o{ GIFTS : gifted
-    PLANTS ||--o{ PUBLIC_GUESTBOOK_ENTRIES : receives_entries
 
     CHAT_SESSIONS ||--o{ CHAT_MESSAGES : contains
     DIARY_ENTRIES ||--o{ DIARY_MEDIA : attaches
@@ -259,12 +258,11 @@ AI가 작성한 일기를 사용자가 수정해도 `source_type`은 `AI`로 유
 
 ### `public_guestbook_entries`
 
-방명록에는 받는 사람이나 공개 범위를 저장하지 않는다. 모든 방명록은 전체 공개된다.
+특정 식물이 아니라 서비스 전체를 대상으로 하는 방명록이다. 둘러보러 온 사용자가 인사말을 남기면 모든 사용자에게 공개된다.
 
 | 컬럼 | 타입 | 설명 |
 |---|---|---|
 | id | BIGSERIAL PK | 방명록 ID |
-| plant_id | BIGINT FK | 방명록 대상 식물 |
 | author_user_id | BIGINT FK | 작성 사용자 |
 | nickname_snapshot | VARCHAR(50) | 작성 당시 닉네임 |
 | content | VARCHAR(500) | 방명록 내용 |
@@ -322,8 +320,8 @@ CREATE INDEX idx_public_diary
     ON diary_entries (diary_at DESC)
     WHERE is_public = TRUE;
 
-CREATE INDEX idx_guestbook_plant_created
-    ON public_guestbook_entries (plant_id, created_at DESC);
+CREATE INDEX idx_guestbook_created
+    ON public_guestbook_entries (created_at DESC);
 
 CREATE INDEX idx_gifts_recipient
     ON gifts (recipient_user_id, gifted_on DESC);

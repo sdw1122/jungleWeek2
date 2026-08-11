@@ -1,0 +1,3 @@
+.back-to-dashboard{position:sticky;top:16px;z-index:20;display:inline-flex;align-items:center;gap:6px;width:fit-content;margin:20px 0 0 24px;padding:12px 22px;border-radius:999px;background:#173e28;color:#fff;text-decoration:none;font-weight:800;font-size:14px;box-shadow:0 10px 24px rgba(23,62,40,.2);transition:background .2s}
+.back-to-dashboard:hover{background:#0a8f46}
+@media(max-width:640px){.back-to-dashboard{margin:14px 0 0 14px;padding:10px 16px;font-size:13px}}
