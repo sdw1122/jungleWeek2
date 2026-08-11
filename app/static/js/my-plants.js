@@ -4,7 +4,6 @@ if(current&&!plants.some(item=>item.name===current.name)){plants.push({...curren
 const list=document.querySelector('#my-plant-list');
 const empty=document.querySelector('#empty-plants');
 document.querySelector('#plant-count').textContent=plants.length;
-document.querySelector('#care-count').textContent=plants.filter(item=>(item.energy||0)<100).length;
 document.querySelector('#bloom-count').textContent=plants.filter(item=>(item.energy||0)>=70).length;
 if(!plants.length){empty.hidden=false;}else{
   plants.forEach((plant,index)=>{
