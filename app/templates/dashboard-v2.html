@@ -10,7 +10,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css?v=4">
   <link rel="stylesheet" href="../css/dashboard-fixes.css?v=4">
-  <link rel="stylesheet" href="../css/growth-stages.css?v=5">
+  <link rel="stylesheet" href="../css/growth-stages.css?v=10">
+  <link rel="stylesheet" href="../css/growth-polish.css?v=1">
+  <link rel="stylesheet" href="../css/dracaena-fix.css?v=1">
+  <link rel="stylesheet" href="../css/hoya-fix.css?v=1">
+  <link rel="stylesheet" href="../css/calathea-fix.css?v=1">
+  <link rel="stylesheet" href="../css/ficus-fix.css?v=1">
+  <link rel="stylesheet" href="../css/lucky-bamboo-fix.css?v=1">
+  <link rel="stylesheet" href="../css/succulent-fix.css?v=1">
+  <link rel="stylesheet" href="../css/gift-card.css?v=1">
+  <style>.gift-form-view[hidden]{display:none}</style>
   <link rel="stylesheet" href="../css/dashboard-nav.css?v=2">
 </head>
 <body>
@@ -52,13 +61,31 @@
 <div class="growth-modal" id="growth-modal" hidden role="dialog" aria-modal="true" aria-labelledby="growth-modal-title">
   <div class="growth-modal-backdrop"></div>
   <section class="growth-modal-card">
-    <div class="celebration" aria-hidden="true">🎉</div>
-    <p class="modal-label">GROWTH COMPLETE</p>
-    <h2 id="growth-modal-title">축하합니다!<br>다 키우셨어요~</h2>
-    <p>진짜 사랑하는 사람에게 식물을 선물하고 싶으시면<br><strong>카카오톡 선물하기</strong>를 눌러주세요!</p>
-    <a class="kakao-gift" href="https://gift.kakao.com" target="_blank" rel="noopener noreferrer"><span>💬</span> 카카오톡 선물하기</a>
-    <button class="modal-later" type="button">조금 더 둘러볼게요</button>
+    <div class="gift-form-view" id="gift-form-view">
+      <div class="celebration" aria-hidden="true">🎁</div>
+      <p class="modal-label">GROWTH COMPLETE</p>
+      <h2 id="growth-modal-title">정성껏 키운 식물을<br>선물해보세요</h2>
+      <p class="gift-intro">Farmda에서 함께하는 친구의 닉네임과<br>전하고 싶은 마음을 적어주세요.</p>
+      <form class="gift-form" id="gift-form" novalidate>
+        <label for="gift-nickname"><span>선물할 닉네임</span><small>필수</small></label>
+        <div class="nickname-field"><b>@</b><input id="gift-nickname" name="nickname" type="text" minlength="2" maxlength="50" placeholder="Farmda 닉네임을 입력하세요" autocomplete="off" required></div>
+        <p class="field-help">게임 안에서 사용하는 정확한 닉네임을 입력해주세요.</p>
+        <label for="gift-message"><span>선물할 때 메시지</span><small>선택</small></label>
+        <textarea id="gift-message" name="message" maxlength="200" rows="4" placeholder="예쁘게 키운 식물이야. 너에게 좋은 일이 가득하길 바라!"></textarea>
+        <div class="message-meta"><span id="gift-error" role="alert"></span><b><i id="gift-message-count">0</i> / 200</b></div>
+        <button class="gift-submit" type="submit"><span>🌿</span><b>이 식물 선물하기</b><i>→</i></button>
+      </form>
+      <button class="modal-later" type="button">조금 더 돌봐볼게요</button>
+    </div>
+    <div class="gift-success" id="gift-success" hidden>
+      <div class="gift-success-icon">💌</div>
+      <p class="modal-label">GIFT READY</p>
+      <h2><strong id="gift-recipient"></strong>님에게<br>마음을 전했어요!</h2>
+      <div class="gift-ticket"><span id="gift-plant-icon">🪴</span><div><small>보낸 식물</small><b id="gift-plant-name">식물</b></div></div>
+      <blockquote id="gift-sent-message"></blockquote>
+      <button class="gift-done" type="button">확인</button>
+    </div>
   </section>
 </div>
-<script src="../js/dashboard.js?v=7"></script>
+<script src="../js/dashboard.js?v=12"></script>
 </body></html>

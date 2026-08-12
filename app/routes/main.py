@@ -56,12 +56,16 @@ def frontend_page(page: str):
 @main_bp.get("/css/<path:filename>")
 def legacy_css(filename: str):
     """Keep the original static page paths working after the Flask migration."""
-    return send_from_directory(main_bp.root_path + "/../static/css", filename)
+    response = send_from_directory(main_bp.root_path + "/../static/css", filename, max_age=0)
+    response.cache_control.no_store = True
+    return response
 
 
 @main_bp.get("/js/<path:filename>")
 def legacy_js(filename: str):
-    return send_from_directory(main_bp.root_path + "/../static/js", filename)
+    response = send_from_directory(main_bp.root_path + "/../static/js", filename, max_age=0)
+    response.cache_control.no_store = True
+    return response
 
 
 @main_bp.get("/login.html")

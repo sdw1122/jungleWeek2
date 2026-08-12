@@ -1,0 +1,6 @@
+/* Benjamin ficus: mature plants carry clusters of small orange fig fruits. */
+.seed-ficus.growth-mature .plant-bloom{display:block;z-index:6;width:12px;height:12px;border:1px solid #d67b16;border-radius:50%;clip-path:none;background:radial-gradient(circle at 35% 28%,#ffd76c 0 16%,#f4a51c 38%,#df7e0e 78%);box-shadow:9px 2px 0 -1px #ef9918,4px 10px 0 -1px #d9790d;transform:none}
+.seed-ficus.growth-mature .plant-bloom:before{content:"";position:absolute;z-index:-1;left:4px;top:-12px;width:3px;height:15px;border-radius:3px;background:#6f7540;transform:rotate(-20deg);transform-origin:bottom}
+.seed-ficus.growth-mature .bloom-1{left:103px;top:43px}.seed-ficus.growth-mature .bloom-2{left:71px;top:75px;transform:scale(.86)}.seed-ficus.growth-mature .bloom-3{left:139px;top:70px;transform:scale(.9)}.seed-ficus.growth-mature .bloom-4{left:86px;top:106px;transform:scale(.78)}.seed-ficus.growth-mature .bloom-5{left:127px;top:112px;transform:scale(.8)}
+.seed-ficus.growth-mature .plant-model:after{display:none!important}
+.mini-seed.seed-ficus.has-model .plant-model{margin:-115px 0 0 -115px;transform:scale(.27)!important}
