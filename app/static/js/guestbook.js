@@ -84,44 +84,42 @@ function render() {
         const hasDisliked = rx.dislikedBy.includes(CURRENT_USER);
 
         const repliesHtml = rp.map(r => `
-          <div style="background:#f8f9fa; padding:12px 16px; margin-top:12px; border-radius:8px; border-left:3px solid #12a84e; font-size:14px; color:#333; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-            <b style="color:#222; margin-right:8px; display:inline-block; margin-bottom:4px;">${escapeHtml(r.author)}</b>
-            <div style="line-height:1.5;">${escapeHtml(r.content)}</div>
+          <div class="reply-item">
+            <b class="reply-author">${escapeHtml(r.author)}</b>
+            <span class="reply-content">${escapeHtml(r.content)}</span>
           </div>
         `).join('');
 
-        return `<article class="entry-card" data-id="${escapeHtml(entry.id)}" style="background:#fff; padding:24px; border-radius:16px; border:1px solid #eaeaea; margin-bottom:20px; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
-        <div class="entry-card-meta" style="display:flex; align-items:center; margin-bottom:12px;">
-          <div style="width:36px; height:36px; border-radius:50%; background:#e9ecef; display:flex; align-items:center; justify-content:center; margin-right:12px; font-weight:bold; color:#6c757d;">
-             ${escapeHtml(entry.author).charAt(0)}
-          </div>
-          <strong class="entry-author" style="font-size:16px; color:#212529; margin-right:12px;">${escapeHtml(entry.author)}</strong>
-          <span style="font-size:13px; color:#adb5bd;">${timeAgo(entry.createdAt)}</span>
+        return `<article class="entry-card" data-id="${escapeHtml(entry.id)}">
+        <div class="entry-card-meta">
+          <div class="avatar">${escapeHtml(entry.author).charAt(0)}</div>
+          <strong class="entry-author">${escapeHtml(entry.author)}</strong>
+          <span>${timeAgo(entry.createdAt)}</span>
           ${entry.author === CURRENT_USER ? `
             <div style="margin-left:auto; display:flex; gap:12px;">
-              <button class="entry-edit" type="button" aria-label="수정" style="border:none;background:none;color:#6c757d;cursor:pointer;font-size:13px;font-weight:600;">수정</button>
-              <button class="entry-delete" type="button" aria-label="삭제" style="border:none;background:none;color:#fa5252;cursor:pointer;font-size:13px;font-weight:600;">삭제</button>
+              <button class="entry-edit" type="button" aria-label="수정">수정</button>
+              <button class="entry-delete" type="button" aria-label="삭제">삭제</button>
             </div>
           ` : ''}
         </div>
-        <p class="entry-content" style="font-size:15px; line-height:1.7; color:#343a40; margin:16px 0; word-break:break-all;">${escapeHtml(entry.content)}</p>
+        <p class="entry-content">${escapeHtml(entry.content)}</p>
         
-        <div style="display:flex; gap:10px; margin-top:20px; align-items:center; border-top:1px solid #f1f3f5; padding-top:16px;">
-            <button class="reaction-btn" data-type="like" style="background:${hasLiked ? '#e3f2fd' : '#f8f9fa'}; color:${hasLiked ? '#1971c2' : '#495057'}; border:1px solid ${hasLiked ? '#a5d8ff' : '#dee2e6'}; border-radius:20px; padding:6px 14px; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s;">
+        <div class="entry-actions">
+            <button class="reaction-btn ${hasLiked ? 'active-like' : ''}" data-type="like">
               👍 좋아요 ${rx.likedBy.length > 0 ? rx.likedBy.length : ''}
             </button>
-            <button class="reaction-btn" data-type="dislike" style="background:${hasDisliked ? '#ffe3e3' : '#f8f9fa'}; color:${hasDisliked ? '#e03131' : '#495057'}; border:1px solid ${hasDisliked ? '#ffc9c9' : '#dee2e6'}; border-radius:20px; padding:6px 14px; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s;">
+            <button class="reaction-btn ${hasDisliked ? 'active-dislike' : ''}" data-type="dislike">
               👎 싫어요 ${rx.dislikedBy.length > 0 ? rx.dislikedBy.length : ''}
             </button>
             
-            <button class="reply-toggle" style="background:none; border:none; color:#12a84e; font-weight:700; font-size:14px; margin-left:auto; cursor:pointer; display:flex; align-items:center; gap:4px;">
-              <span style="font-size:16px;">💬</span> 답글 달기
+            <button class="reply-toggle">
+              <span>💬</span> 답글 달기
             </button>
         </div>
         
-        <div class="reply-container" style="display:none; margin-top:16px; display:flex; gap:10px;">
-            <input type="text" class="reply-input" placeholder="답글을 입력하세요..." style="flex-grow:1; padding:12px 16px; font-size:14px; border:1px solid #ced4da; border-radius:8px; outline:none; background:#f8f9fa; transition:border 0.2s;">
-            <button class="reply-submit" style="background:#12a84e; color:#fff; font-weight:700; border:none; padding:0 20px; border-radius:8px; cursor:pointer; transition:background 0.2s;">등록</button>
+        <div class="reply-container">
+            <input type="text" class="reply-input" placeholder="답글을 입력하세요...">
+            <button class="reply-submit">등록</button>
         </div>
         ${repliesHtml}
       </article>`;
@@ -191,7 +189,7 @@ entryList.addEventListener('click', (event) => {
   // Reply Toggle
   if (event.target.closest('.reply-toggle')) {
     const replyContainer = card.querySelector('.reply-container');
-    replyContainer.style.display = replyContainer.style.display === 'none' ? 'flex' : 'none';
+    replyContainer.classList.toggle('active');
   }
 
   // Reply Submit
