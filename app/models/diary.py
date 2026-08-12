@@ -61,7 +61,6 @@ class DiaryEntry(db.Model):
     negative_energy_snapshot = db.Column(db.Integer, nullable=False)
     growth_stage_snapshot = db.Column(db.String(20), nullable=False)
     growth_tendency_snapshot = db.Column(db.String(20), nullable=False)
-    is_public = db.Column(db.Boolean, nullable=False, default=False)
     diary_date = db.Column(db.Date, nullable=False)
     activity_summary = db.Column(
         JSON().with_variant(JSONB, "postgresql"),

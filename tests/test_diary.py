@@ -129,7 +129,6 @@ class DiaryApiTestCase(unittest.TestCase):
             negative_energy_snapshot=5,
             growth_stage_snapshot="BUD",
             growth_tendency_snapshot="POSITIVE",
-            is_public=False,
             diary_date=diary_date,
             activity_summary={"careActions": [], "chat": {}, "totals": {}},
         )
@@ -249,7 +248,6 @@ class DiaryApiTestCase(unittest.TestCase):
             self.assertEqual(entry.diary_date, FIXED_DAY)
             self.assertEqual(entry.growth_score_snapshot, 45)
             self.assertEqual(entry.growth_tendency_snapshot, "POSITIVE")
-            self.assertFalse(entry.is_public)
 
     def test_activity_snapshot_does_not_change_after_later_care(self):
         entry_id = self._save_today().get_json()["data"]["entry"]["id"]

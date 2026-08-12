@@ -1,5 +1,7 @@
 import unittest
 
+from sqlalchemy.exc import IntegrityError
+
 from app import create_app
 from app.extensions import db
 from app.models import (
@@ -262,6 +264,43 @@ class PlantApiTestCase(unittest.TestCase):
             },
         )
         self.assertEqual(response.status_code, 403)
+
+    def test_praise_action_is_rejected_by_api_and_database(self):
+        plant_id = self._create_plant().get_json()["data"]["plant"]["id"]
+        response = self._post(
+            f"/api/v1/plants/{plant_id}/care",
+            {"actionType": "PRAISE"},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json()["error"]["code"], "INVALID_ACTION")
+
+        with self.app.app_context():
+            db.session.add(
+                CareLog(
+                    plant_id=plant_id,
+                    user_id=self.user_id,
+                    action_type="PRAISE",
+                    growth_delta=5,
+                    positive_delta=5,
+                )
+            )
+            with self.assertRaises(IntegrityError):
+                db.session.commit()
+            db.session.rollback()
+
+    def test_all_supported_care_actions_are_stored(self):
+        plant_id = self._create_plant().get_json()["data"]["plant"]["id"]
+        actions = ("PET", "WATER", "SUNLIGHT", "IGNORE")
+        for action_type in actions:
+            response = self._post(
+                f"/api/v1/plants/{plant_id}/care",
+                {"actionType": action_type},
+            )
+            self.assertEqual(response.status_code, 200)
+
+        with self.app.app_context():
+            logs = CareLog.query.order_by(CareLog.id).all()
+            self.assertEqual([log.action_type for log in logs], list(actions))
 
 
 if __name__ == "__main__":

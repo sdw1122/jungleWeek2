@@ -219,11 +219,7 @@ actionButtons.forEach(button => button.addEventListener('click', async () => {
   const action = button.dataset.action;
   try {
     await care(apiActions[action]);
-    if (action === 'water') {
-      appendNarration(replies[action]);
-    } else {
-      appendMessage('USER', replies[action]);
-    }
+    appendNarration(replies[action]);
     messages.scrollTop = messages.scrollHeight;
     stagePlant.animate(
       [{ transform: 'scale(.94)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }],
@@ -297,7 +293,7 @@ profileToggle.addEventListener('click', () => {
   profileToggle.setAttribute('aria-expanded', String(willOpen));
 });
 document.addEventListener('click', event => {
-  if (!profileCard.hidden && !profileCard.contains(event.target) && event.target !== profileToggle) {
+  if (!profileCard.hidden && !profileCard.contains(event.target) && !profileToggle.contains(event.target)) {
     profileCard.hidden = true;
     profileToggle.setAttribute('aria-expanded', 'false');
   }
@@ -401,6 +397,7 @@ receivedGiftConfirm.addEventListener('click', async () => {
     chosen.receivedGift = null;
     receivedGift = null;
     receivedGiftModal.hidden = true;
+    document.querySelector('#profile-gift-indicator').hidden = true;
     document.body.style.overflow = '';
   } catch (error) {
     document.querySelector('#received-gift-error').textContent = error.message;

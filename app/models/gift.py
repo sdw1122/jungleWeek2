@@ -42,7 +42,6 @@ class Gift(db.Model):
     gifted_on = db.Column(db.Date, nullable=False)
     message_card = db.Column(db.Text)
     status = db.Column(db.String(20), nullable=False, default="READY")
-    claim_code_hash = db.Column(db.String(255))
     accepted_at = db.Column(db.DateTime(timezone=True))
     recipient_viewed_at = db.Column(db.DateTime(timezone=True))
     created_at = db.Column(

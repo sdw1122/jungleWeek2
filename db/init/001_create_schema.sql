@@ -134,7 +134,6 @@ CREATE TABLE gifts (
     gifted_on DATE NOT NULL,
     message_card TEXT,
     status VARCHAR(20) NOT NULL DEFAULT 'READY',
-    claim_code_hash VARCHAR(255),
     accepted_at TIMESTAMPTZ,
     recipient_viewed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -223,7 +222,6 @@ CREATE TABLE diary_entries (
     negative_energy_snapshot INTEGER NOT NULL,
     growth_stage_snapshot VARCHAR(20) NOT NULL,
     growth_tendency_snapshot VARCHAR(20) NOT NULL,
-    is_public BOOLEAN NOT NULL DEFAULT FALSE,
     diary_date DATE NOT NULL,
     activity_summary JSONB NOT NULL DEFAULT '{}'::jsonb,
     diary_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -244,22 +242,6 @@ CREATE TABLE diary_entries (
         CHECK (growth_tendency_snapshot IN ('POSITIVE', 'NEGATIVE')),
     CONSTRAINT uq_diary_plant_date
         UNIQUE (plant_id, diary_date)
-);
-
-CREATE TABLE diary_media (
-    id BIGSERIAL PRIMARY KEY,
-    diary_entry_id BIGINT NOT NULL REFERENCES diary_entries(id) ON DELETE CASCADE,
-    media_type VARCHAR(20) NOT NULL,
-    media_url TEXT NOT NULL,
-    sort_order INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT chk_diary_media_type
-        CHECK (media_type IN ('IMAGE', 'VIDEO')),
-    CONSTRAINT chk_diary_media_sort_order
-        CHECK (sort_order >= 0),
-    CONSTRAINT uq_diary_media_sort_order
-        UNIQUE (diary_entry_id, sort_order)
 );
 
 CREATE TABLE public_guestbook_entries (
@@ -318,10 +300,6 @@ CREATE UNIQUE INDEX uq_ownership_gift
     ON plant_ownerships (gift_id)
     WHERE gift_id IS NOT NULL;
 
-CREATE UNIQUE INDEX uq_gifts_claim_code_hash
-    ON gifts (claim_code_hash)
-    WHERE claim_code_hash IS NOT NULL;
-
 CREATE INDEX idx_plants_species
     ON plants (species_id);
 
@@ -342,10 +320,6 @@ CREATE INDEX idx_chat_messages_session
 
 CREATE INDEX idx_diary_entries_plant_date
     ON diary_entries (plant_id, diary_at DESC);
-
-CREATE INDEX idx_public_diary
-    ON diary_entries (diary_at DESC)
-    WHERE is_public = TRUE;
 
 CREATE INDEX idx_guestbook_created
     ON public_guestbook_entries (created_at DESC);

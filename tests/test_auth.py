@@ -88,6 +88,12 @@ class AuthApiTestCase(unittest.TestCase):
         self.assertEqual(me_response.status_code, 200)
         self.assertEqual(me_response.get_json()["data"]["user"]["nickname"], "초록이")
         self.assertEqual(self.client.get("/welcome.html").status_code, 200)
+        root_response = self.client.get("/")
+        self.assertEqual(root_response.status_code, 302)
+        self.assertTrue(root_response.location.endswith("/my-plants.html"))
+        plants_page = self.client.get("/my-plants.html").get_data(as_text=True)
+        self.assertIn("FARMADA", plants_page)
+        self.assertIn("초록이", plants_page)
 
         csrf_token = login_response.get_json()["data"]["csrfToken"]
         logout_response = self.client.post(
@@ -163,7 +169,7 @@ class AuthApiTestCase(unittest.TestCase):
             response = self.client.get("/api/v1/auth/google/callback")
 
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.location.endswith("/welcome.html"))
+        self.assertTrue(response.location.endswith("/my-plants.html"))
         self.assertEqual(self.client.get("/api/v1/auth/me").status_code, 200)
         with self.app.app_context():
             user = User.query.one()

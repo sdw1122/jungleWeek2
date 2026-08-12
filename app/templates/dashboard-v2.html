@@ -39,6 +39,7 @@
     .message-speaker{display:block;margin:0 4px 3px;color:#738078;font-size:9px;font-weight:700}
     .message-row.user{display:flex;flex-direction:column;align-items:flex-end}.message-row.plant{display:flex;flex-direction:column;align-items:flex-start}.message-row p{margin-left:0!important;margin-right:0!important}
     .received-gift-card{text-align:center}.received-gift-card h2 strong{color:#178c4a}.received-gift-card blockquote{min-height:45px;margin:14px 0 18px;padding:14px 17px;border-radius:14px;background:#f7f7f4;color:#657068;font-size:12px;line-height:1.65;text-align:left}.received-gift-card blockquote:empty{display:none}.received-gift-error{min-height:18px;margin:0 0 8px;color:#d84d48;font-size:12px}
+    .profile-toggle-avatar{position:absolute;inset:0;display:grid;place-items:center;overflow:visible;border-radius:50%}.profile-toggle-avatar img{width:100%;height:100%;border-radius:inherit;object-fit:cover}.profile-gift-indicator{position:absolute;right:-18px;top:-9px;padding:4px 7px;border:2px solid #fff;border-radius:999px;background:#ffeed0;color:#9a5700;font-size:9px;font-style:normal;font-weight:900;white-space:nowrap}.profile-gift-indicator[hidden]{display:none!important}.profile-card-head>span{overflow:hidden}.profile-card-head>span img{width:100%;height:100%;object-fit:cover}
   </style>
   <link rel="stylesheet" href="../css/dashboard-nav.css?v=2">
 </head>
@@ -46,11 +47,16 @@
 <main class="dashboard">
   <aside class="status-panel">
     <div class="status-heading">
-      <h1>🌱 <span>상태창</span></h1>
-      <button class="profile-toggle" id="profile-toggle" type="button" aria-expanded="false" aria-controls="profile-card" aria-label="Farmda 메뉴 열기">F</button>
+      <h1>🌱 <span>FARMADA</span></h1>
+      <button class="profile-toggle" id="profile-toggle" type="button" aria-expanded="false" aria-controls="profile-card" aria-label="{{ current_user.nickname }}님의 Farmda 메뉴 열기">
+        <span class="profile-toggle-avatar">
+          {% if current_user.profile_image_url %}<img src="{{ current_user.profile_image_url }}" alt="{{ current_user.nickname }} 프로필 사진">{% else %}{{ current_user.nickname[:1] | upper }}{% endif %}
+          <i class="profile-gift-indicator" id="profile-gift-indicator" {% if not unread_gift_count %}hidden{% endif %}>🎁 선물</i>
+        </span>
+      </button>
     </div>
     <aside class="profile-card" id="profile-card" hidden>
-      <div class="profile-card-head"><span>F</span><div><strong>Farmda</strong><small>나의 식물 공간</small></div></div>
+      <div class="profile-card-head"><span>{% if current_user.profile_image_url %}<img src="{{ current_user.profile_image_url }}" alt="">{% else %}{{ current_user.nickname[:1] | upper }}{% endif %}</span><div><strong>{{ current_user.nickname }}</strong><small>나의 식물 공간</small></div></div>
       <nav aria-label="Farmda 메뉴">
         <a href="diary.html" id="diary-link"><span>📔</span><b>성장일기</b></a>
         <a href="dictionary.html"><span>🌿</span><b>식물백과</b></a>
@@ -119,5 +125,5 @@
     <button class="gift-done" id="received-gift-confirm" type="button">선물 확인하기</button>
   </section>
 </div>
-<script src="../js/dashboard.js?v=13"></script>
+<script src="../js/dashboard.js?v=17"></script>
 </body></html>

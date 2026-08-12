@@ -1,0 +1,31 @@
+<link rel="stylesheet" href="/css/global-nav.css?v=1">
+<header class="farmada-global-nav">
+  <a class="farmada-global-brand" href="{{ '/my-plants.html' if current_user.is_authenticated else '/' }}">🌱 <span>FARMADA</span></a>
+  {% if current_user.is_authenticated %}
+  <div class="farmada-global-profile">
+    <button class="farmada-profile-button" type="button" aria-expanded="false" aria-controls="farmada-profile-menu">
+      <span class="farmada-avatar">
+        {% if current_user.profile_image_url %}
+        <img src="{{ current_user.profile_image_url }}" alt="{{ current_user.nickname }} 프로필 사진">
+        {% else %}
+        <b>{{ current_user.nickname[:1] | upper }}</b>
+        {% endif %}
+        {% if unread_gift_count %}<i class="farmada-gift-dot" title="확인하지 않은 선물 {{ unread_gift_count }}개">🎁</i>{% endif %}
+      </span>
+      <span class="farmada-profile-copy"><strong>{{ current_user.nickname }}</strong><small>나의 식물 공간</small></span>
+      {% if unread_gift_count %}<em class="farmada-gift-label">선물 받음 {{ unread_gift_count }}</em>{% endif %}
+    </button>
+    <aside class="farmada-profile-menu" id="farmada-profile-menu" hidden>
+      <a href="/my-plants.html">🪴 내가 키우고 있는 식물</a>
+      <a href="/plant-select.html">🌱 새로운 식물 키우기</a>
+      <a href="/diary.html">📔 성장일기</a>
+      <a href="/dictionary.html">🌿 식물백과</a>
+      <a href="/guestbook.html">💌 방명록</a>
+      <button type="button" data-global-logout>🔓 로그아웃</button>
+    </aside>
+  </div>
+  {% else %}
+  <a class="farmada-global-login" href="/login.html">로그인 · 나의 식물 공간</a>
+  {% endif %}
+</header>
+<script src="/js/global-nav.js?v=1"></script>

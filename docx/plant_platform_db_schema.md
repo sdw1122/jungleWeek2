@@ -147,7 +147,7 @@ END
 | id | BIGSERIAL PK | 행동 기록 ID |
 | plant_id | BIGINT FK | 대상 식물 |
 | user_id | BIGINT FK | 행동 사용자 |
-| action_type | VARCHAR(30) | PRAISE, PET, WATER, SUNLIGHT |
+| action_type | VARCHAR(30) | PET, WATER, SUNLIGHT, IGNORE |
 | growth_delta | SMALLINT | 성장도 변화량 |
 | positive_delta | INTEGER | 긍정 에너지 변화량 |
 | negative_delta | INTEGER | 부정 에너지 변화량 |
@@ -204,23 +204,13 @@ END
 | negative_energy_snapshot | INTEGER | 당시 부정 에너지 |
 | growth_stage_snapshot | VARCHAR(20) | 당시 성장 단계 |
 | growth_tendency_snapshot | VARCHAR(20) | 당시 성장 성향 |
-| is_public | BOOLEAN | 성장일기 공개 여부 |
+| diary_date | DATE | 한국 날짜 기준 일기 날짜 |
+| activity_summary | JSONB | 저장 당시 돌봄·대화 요약 |
 | diary_at | TIMESTAMPTZ | 일기 기준 시간 |
 | created_at | TIMESTAMPTZ | 생성일 |
 | updated_at | TIMESTAMPTZ | 수정일 |
 
 AI가 작성한 일기를 사용자가 수정해도 `source_type`은 `AI`로 유지하고 수정 시간만 갱신한다.
-
-### `diary_media`
-
-| 컬럼 | 타입 | 설명 |
-|---|---|---|
-| id | BIGSERIAL PK | 미디어 ID |
-| diary_entry_id | BIGINT FK | 성장일기 ID |
-| media_type | VARCHAR(20) | IMAGE, VIDEO |
-| media_url | TEXT | 파일 주소 |
-| sort_order | INTEGER | 표시 순서 |
-| created_at | TIMESTAMPTZ | 등록일 |
 
 ---
 
@@ -240,8 +230,8 @@ AI가 작성한 일기를 사용자가 수정해도 `source_type`은 `AI`로 유
 | gifted_on | DATE | 실제로 선물한 날짜 |
 | message_card | TEXT NULL | 메시지 카드 |
 | status | VARCHAR(20) | READY, SENT, ACCEPTED, CANCELLED |
-| claim_code_hash | VARCHAR(255) NULL | 선물 등록 코드 |
 | accepted_at | TIMESTAMPTZ NULL | 인수 완료 시간 |
+| recipient_viewed_at | TIMESTAMPTZ NULL | 수신자 최초 확인 시간 |
 | created_at | TIMESTAMPTZ | 생성일 |
 | updated_at | TIMESTAMPTZ | 수정일 |
 
@@ -315,10 +305,6 @@ CREATE INDEX idx_chat_messages_session
 
 CREATE INDEX idx_diary_entries_plant_date
     ON diary_entries (plant_id, diary_at DESC);
-
-CREATE INDEX idx_public_diary
-    ON diary_entries (diary_at DESC)
-    WHERE is_public = TRUE;
 
 CREATE INDEX idx_guestbook_created
     ON public_guestbook_entries (created_at DESC);

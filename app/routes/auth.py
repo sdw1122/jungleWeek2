@@ -53,7 +53,7 @@ def csrf():
 def _safe_next_url(value: str | None) -> str:
     if value and value.startswith("/") and not value.startswith("//"):
         return value
-    return "/welcome.html"
+    return "/my-plants.html"
 
 
 def _google_error_redirect(code: str):

@@ -1,0 +1,5 @@
+.diary-loading[hidden],
+.diary-empty[hidden],
+#diary-view[hidden] {
+  display: none !important;
+}

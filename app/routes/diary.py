@@ -164,7 +164,6 @@ def _apply_snapshot(entry: DiaryEntry, plant: Plant, summary: dict) -> None:
         "NEGATIVE" if plant.negative_energy > plant.positive_energy else "POSITIVE"
     )
     entry.activity_summary = summary
-    entry.is_public = False
 
 
 def _entry_can_edit(entry: DiaryEntry) -> bool:

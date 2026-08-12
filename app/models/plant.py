@@ -191,6 +191,8 @@ class Plant(db.Model):
             "ownershipStartedAt": _isoformat(ownership.started_at)
             if ownership
             else None,
+            "acquisitionType": ownership.acquisition_type if ownership else None,
+            "giftId": ownership.gift_id if ownership else None,
         }
 
 

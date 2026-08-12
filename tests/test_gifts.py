@@ -158,6 +158,11 @@ class GiftApiTestCase(unittest.TestCase):
             self.owner_client.get("/api/v1/plants").get_json()["data"]["plants"],
             [],
         )
+        recipient_list = self.recipient_client.get("/api/v1/plants").get_json()["data"]["plants"]
+        self.assertEqual(recipient_list[0]["acquisitionType"], "GIFT")
+        self.assertEqual(recipient_list[0]["giftId"], gift_id)
+        recipient_page = self.recipient_client.get("/my-plants.html").get_data(as_text=True)
+        self.assertIn("선물 받음 1", recipient_page)
         received = self.recipient_client.get(f"/api/v1/plants/{self.plant_id}")
         self.assertEqual(received.status_code, 200)
         plant = received.get_json()["data"]["plant"]
@@ -192,6 +197,8 @@ class GiftApiTestCase(unittest.TestCase):
         self.assertIsNotNone(first.get_json()["data"]["gift"]["recipientViewedAt"])
         detail = self.recipient_client.get(f"/api/v1/plants/{self.plant_id}")
         self.assertIsNone(detail.get_json()["data"]["plant"]["receivedGift"])
+        recipient_page = self.recipient_client.get("/my-plants.html").get_data(as_text=True)
+        self.assertNotIn("선물 받음 1", recipient_page)
 
     @patch(
         "app.routes.chat.analyze_chat",
