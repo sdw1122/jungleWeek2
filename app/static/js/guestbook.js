@@ -1,5 +1,5 @@
 const STORAGE_KEY = 'farmda_guestbook_entries';
-const CURRENT_USER = '나';
+const CURRENT_USER = '초록잎정민'; // 현재 로그인한 내 닉네임 (실제 연동 시 세션에서 받아옴)
 
 function loadEntries() {
   const raw = localStorage.getItem(STORAGE_KEY);
