@@ -1,0 +1,6 @@
+/* Monstera: a single cream spathe wrapping a long textured spadix. */
+.seed-monstera.growth-mature .plant-bloom{display:none!important}
+.seed-monstera.growth-mature .plant-model:after{content:"";position:absolute;display:block!important;z-index:7;left:84px;top:-20px;width:68px;height:112px;border-radius:58% 42% 54% 46%/38% 45% 55% 62%;background:linear-gradient(100deg,#dfe5b2 0,#f8f5d3 37%,#e9ecc5 62%,#bdca8f 100%);box-shadow:inset -8px 0 13px rgba(114,130,72,.18),inset 5px 0 9px rgba(255,255,255,.55),0 6px 10px rgba(45,71,43,.16);transform:rotate(8deg);clip-path:polygon(53% 0,79% 8%,97% 31%,93% 61%,77% 88%,53% 100%,24% 92%,5% 69%,12% 40%,31% 17%)}
+.seed-monstera.growth-mature .plant-bud{display:block;z-index:8;left:105px;top:-8px;width:25px;height:91px;border-radius:48% 48% 38% 38%/14% 14% 8% 8%;background:radial-gradient(circle,#8f8754 0 11%,transparent 13%) 0 0/7px 7px,linear-gradient(90deg,#b8ad69,#e0d89b 48%,#a99e5f);box-shadow:inset -4px 0 5px rgba(92,81,41,.2),0 3px 6px rgba(57,65,37,.18);transform:rotate(-5deg)}
+.seed-monstera.growth-mature .plant-bud:after{content:"";position:absolute;left:10px;top:84px;z-index:-1;width:7px;height:38px;border-radius:5px;background:linear-gradient(90deg,#42793e,#75a45a,#386d38)}
+.mini-seed.seed-monstera.has-model .plant-model{margin:-115px 0 0 -115px;transform:scale(.27)!important}
