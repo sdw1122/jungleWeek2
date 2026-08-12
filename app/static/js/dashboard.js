@@ -51,7 +51,7 @@ const stages = [
   { min: 70, name: '꽃', emoji: '🌸', next: 100, mood: '정성 덕분에 아름다운 꽃이 피었어요!' }
 ];
 const replies = {
-  water: '시원해요! 뿌리가 촉촉해졌어요. 💧',
+  water: '시원해요!<br>뿌리가 축축해졌어요!',
   sun: '따뜻한 햇빛 덕분에 힘이 나요! ☀️',
   pet: '정성스러운 손길이 느껴져요. 🌱',
   ignore: '조금 외로워요. 저를 잊지 말아주세요. 🌧️'
@@ -157,7 +157,8 @@ actionButtons.forEach(button => button.addEventListener('click', async () => {
   const action = button.dataset.action;
   try {
     await care(apiActions[action]);
-    messages.insertAdjacentHTML('beforeend', `<p class="user">${replies[action]}</p>`);
+    const replyClass = action === 'water' ? 'narration' : 'user';
+    messages.insertAdjacentHTML('beforeend', `<p class="${replyClass}">${replies[action]}</p>`);
     messages.scrollTop = messages.scrollHeight;
     stagePlant.animate(
       [{ transform: 'scale(.94)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }],
