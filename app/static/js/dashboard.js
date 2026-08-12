@@ -152,6 +152,7 @@ function renderGrowth(animate = false) {
   const visualKey = `${seedStyle}-${stageStyle}-${isNegative ? 'wilted' : 'healthy'}`;
 
   document.querySelector('#plant-name').textContent = plantName;
+  document.querySelector('#diary-link').href = `/diary.html?plantId=${chosen.id}`;
   document.querySelector('.plant-chip h2').textContent = plantName;
   document.querySelector('#positive').textContent = chosen.positiveEnergy;
   document.querySelector('#negative').textContent = chosen.negativeEnergy;

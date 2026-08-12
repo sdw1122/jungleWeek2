@@ -156,6 +156,8 @@ CREATE TABLE diary_entries (
     growth_stage_snapshot VARCHAR(20) NOT NULL,
     growth_tendency_snapshot VARCHAR(20) NOT NULL,
     is_public BOOLEAN NOT NULL DEFAULT FALSE,
+    diary_date DATE NOT NULL,
+    activity_summary JSONB NOT NULL DEFAULT '{}'::jsonb,
     diary_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -171,7 +173,9 @@ CREATE TABLE diary_entries (
     CONSTRAINT chk_diary_growth_stage
         CHECK (growth_stage_snapshot IN ('SEED', 'COTYLEDON', 'TRUE_LEAF', 'BUD', 'FLOWER')),
     CONSTRAINT chk_diary_growth_tendency
-        CHECK (growth_tendency_snapshot IN ('POSITIVE', 'NEGATIVE'))
+        CHECK (growth_tendency_snapshot IN ('POSITIVE', 'NEGATIVE')),
+    CONSTRAINT uq_diary_plant_date
+        UNIQUE (plant_id, diary_date)
 );
 
 CREATE TABLE diary_media (

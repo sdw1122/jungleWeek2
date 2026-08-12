@@ -19,7 +19,7 @@ def create_app(config_overrides: dict | None = None) -> Flask:
     init_csrf(app)
 
     from .models import User
-    from .routes import auth_bp, gifts_bp, main_bp, plants_bp
+    from .routes import auth_bp, diary_bp, gifts_bp, main_bp, plants_bp
     from .routes.guestbook import guestbook_bp
     from .routes.chat import chat_bp
 
@@ -70,6 +70,7 @@ def create_app(config_overrides: dict | None = None) -> Flask:
     app.register_blueprint(chat_bp)
     app.register_blueprint(plants_bp)
     app.register_blueprint(gifts_bp)
+    app.register_blueprint(diary_bp)
     app.register_blueprint(guestbook_bp)
     return app
 
