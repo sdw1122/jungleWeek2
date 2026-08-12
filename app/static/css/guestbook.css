@@ -14,7 +14,31 @@
 .entry-list{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
 .entry-card{border:1px solid #e9ece8;border-radius:18px;padding:22px}
 .entry-card-meta{display:flex;align-items:center;gap:10px;color:#8a938b;font-size:13px;margin-bottom:10px}
-.entry-author{font-weight:800;color:#3b463d}
+.entry-content{margin:0;font-size:15px;line-height:1.7;color:#25302a;white-space:pre-wrap;word-break:break-all}
+
+.entry-actions{display:flex;align-items:center;gap:12px;margin-top:20px;padding-top:16px;border-top:1px solid #f1f3f5}
+
+.reaction-group{display:flex;background:#f8f9fa;border-radius:24px;padding:4px;border:1px solid #e9ecef}
+.reaction-btn{background:none;color:#868e96;border:none;border-radius:20px;padding:6px 14px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px}
+.reaction-btn:hover{color:#495057;background:rgba(0,0,0,0.03)}
+.reaction-btn.active-like{background:#fff;color:#1971c2;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.reaction-btn.active-dislike{background:#fff;color:#e03131;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+
+.reply-toggle{background:rgba(23,62,40,0.06);border:none;color:#173e28;font-weight:700;font-size:13px;margin-left:auto;cursor:pointer;display:flex;align-items:center;gap:6px;transition:0.2s;padding:8px 16px;border-radius:20px}
+.reply-toggle:hover{background:rgba(23,62,40,0.12);transform:translateY(-1px)}
+.reply-toggle span{font-size:15px}
+
+.reply-container{display:none;margin-top:16px;gap:10px;align-items:stretch}
+.reply-container.active{display:flex;animation:fadeIn 0.3s ease}
+.reply-input{flex-grow:1;padding:12px 16px;font-size:14px;border:1px solid #ced4da;border-radius:8px;outline:none;background:#f8f9fa;transition:border 0.2s}
+.reply-input:focus{border-color:#173e28;background:#fff}
+.reply-submit{background:#173e28;color:#fff;font-weight:700;border:none;padding:0 20px;border-radius:8px;cursor:pointer;transition:background 0.2s}
+.reply-submit:hover{background:#0a8f46}
+
+.reply-item{background:#f8f9fa;padding:12px 16px;margin-top:12px;border-radius:8px;border-left:3px solid #173e28;font-size:14px;color:#333;box-shadow:0 1px 3px rgba(0,0,0,0.05);animation:fadeIn 0.3s ease}
+.reply-author{color:#173e28;margin-right:8px;display:inline-block;margin-bottom:4px;font-weight:700}
+.reply-content{line-height:1.5;color:#495057}
+
 .entry-edit, .entry-delete{border:none;background:none;cursor:pointer;font-size:13px;font-weight:600;padding:6px 10px;border-radius:6px;transition:0.2s}
 .entry-edit{color:#6c757d}
 .entry-edit:hover{color:#212529;background:#e9ecef}

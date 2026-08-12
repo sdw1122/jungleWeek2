@@ -113,12 +113,14 @@ function render() {
         </div>
         
         <div class="entry-actions">
-            <button class="reaction-btn ${hasLiked ? 'active-like' : ''}" data-type="like">
-              👍 좋아요 ${rx.likedBy.length > 0 ? rx.likedBy.length : ''}
-            </button>
-            <button class="reaction-btn ${hasDisliked ? 'active-dislike' : ''}" data-type="dislike">
-              👎 싫어요 ${rx.dislikedBy.length > 0 ? rx.dislikedBy.length : ''}
-            </button>
+            <div class="reaction-group">
+              <button class="reaction-btn ${hasLiked ? 'active-like' : ''}" data-type="like">
+                👍 좋아요 ${rx.likedBy.length > 0 ? rx.likedBy.length : ''}
+              </button>
+              <button class="reaction-btn ${hasDisliked ? 'active-dislike' : ''}" data-type="dislike">
+                👎 싫어요 ${rx.dislikedBy.length > 0 ? rx.dislikedBy.length : ''}
+              </button>
+            </div>
             
             <button class="reply-toggle">
               <span>💬</span> 답글 달기
