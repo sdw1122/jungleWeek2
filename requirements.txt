@@ -3,6 +3,9 @@ Flask-SQLAlchemy
 Flask-Migrate
 Flask-Login
 Authlib
+requests
 psycopg[binary]
 python-dotenv
 waitress
+
+google-genai
