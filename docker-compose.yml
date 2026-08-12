@@ -23,15 +23,18 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
+      APP_ENV: ${APP_ENV:-development}
       SECRET_KEY: ${SECRET_KEY:-change-this-in-local-development}
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-plant_user}:${POSTGRES_PASSWORD:-plant_password}@db:5432/${POSTGRES_DB:-plant_app}
-      SESSION_COOKIE_SECURE: "0"
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-0}
+      TRUST_PROXY: ${TRUST_PROXY:-0}
+      MAX_CONTENT_LENGTH: ${MAX_CONTENT_LENGTH:-1048576}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5.6-luna}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     depends_on:
       db:
         condition: service_healthy
@@ -43,8 +46,27 @@ services:
       start_period: 15s
     restart: unless-stopped
 
+  caddy:
+    image: caddy:2.11.4-alpine
+    profiles: ["production"]
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: unless-stopped
+
   adminer:
     image: adminer:5.5.0-standalone
+    profiles: ["tools"]
     environment:
       ADMINER_DEFAULT_SERVER: db
       ADMINER_DESIGN: nette
@@ -57,4 +79,6 @@ services:
 
 volumes:
   postgres_data:
+  caddy_data:
+  caddy_config:
 

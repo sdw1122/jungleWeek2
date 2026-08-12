@@ -1,9 +1,30 @@
 from flask import Flask
 from sqlalchemy.exc import SQLAlchemyError
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from .config import Config
 from .extensions import db, login_manager, migrate, oauth
 from .security import init_csrf
+
+
+def _validate_production_config(app: Flask) -> None:
+    if app.testing or app.config.get("APP_ENV") != "production":
+        return
+
+    secret_key = str(app.config.get("SECRET_KEY") or "")
+    errors = []
+    if len(secret_key) < 32 or secret_key in {
+        "development-secret-key",
+        "change-this-in-local-development",
+    }:
+        errors.append("SECRET_KEY must be a random value of at least 32 characters")
+    if not app.config.get("SESSION_COOKIE_SECURE"):
+        errors.append("SESSION_COOKIE_SECURE must be enabled")
+    if not app.config.get("TRUST_PROXY"):
+        errors.append("TRUST_PROXY must be enabled behind the production proxy")
+
+    if errors:
+        raise RuntimeError("Invalid production configuration: " + "; ".join(errors))
 
 
 def create_app(config_overrides: dict | None = None) -> Flask:
@@ -11,6 +32,17 @@ def create_app(config_overrides: dict | None = None) -> Flask:
     app.config.from_object(Config)
     if config_overrides:
         app.config.update(config_overrides)
+
+    _validate_production_config(app)
+
+    if app.config.get("TRUST_PROXY"):
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app,
+            x_for=1,
+            x_proto=1,
+            x_host=1,
+            x_port=1,
+        )
 
     db.init_app(app)
     login_manager.init_app(app)
@@ -49,10 +81,10 @@ def create_app(config_overrides: dict | None = None) -> Flask:
 
     @app.errorhandler(SQLAlchemyError)
     def handle_database_error(error):
-        from flask import jsonify, request
+        from flask import current_app, jsonify, request
 
         db.session.rollback()
-        import traceback; traceback.print_exc()
+        current_app.logger.exception("Database request failed", exc_info=error)
         if request.path.startswith("/api/"):
             return (
                 jsonify(
@@ -64,6 +96,26 @@ def create_app(config_overrides: dict | None = None) -> Flask:
                 503,
             )
         raise error
+
+    @app.after_request
+    def add_security_headers(response):
+        from flask import request
+
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.setdefault(
+            "Permissions-Policy",
+            "camera=(), microphone=(), geolocation=()",
+        )
+        if request.is_secure:
+            response.headers.setdefault(
+                "Strict-Transport-Security",
+                "max-age=31536000",
+            )
+        if request.path.startswith("/api/"):
+            response.headers.setdefault("Cache-Control", "no-store")
+        return response
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)

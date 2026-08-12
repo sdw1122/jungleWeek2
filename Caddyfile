@@ -1,0 +1,13 @@
+{$SITE_ADDRESS:localhost} {
+	encode zstd gzip
+	reverse_proxy web:5000
+
+	header {
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

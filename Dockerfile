@@ -21,4 +21,4 @@ USER farmda
 
 EXPOSE 5000
 
-CMD ["waitress-serve", "--host=0.0.0.0", "--port=5000", "run:app"]
+CMD ["waitress-serve", "--host=0.0.0.0", "--port=5000", "--threads=8", "--channel-timeout=30", "--max-request-body-size=1048576", "--ident=Farmda", "run:app"]
