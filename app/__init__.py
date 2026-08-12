@@ -11,7 +11,9 @@ def create_app() -> Flask:
     db.init_app(app)
 
     from .routes import main_bp
+    from .routes.guestbook import guestbook_bp
 
     app.register_blueprint(main_bp)
+    app.register_blueprint(guestbook_bp)
     return app
 
