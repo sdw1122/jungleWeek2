@@ -83,12 +83,27 @@ function render() {
         const hasLiked = rx.likedBy.includes(CURRENT_USER);
         const hasDisliked = rx.dislikedBy.includes(CURRENT_USER);
 
-        const repliesHtml = rp.map(r => `
+        const repliesHtml = rp.map((r, index) => {
+          const rRx = r.reactions || { likedBy: [], dislikedBy: [] };
+          const rHasLiked = rRx.likedBy.includes(CURRENT_USER);
+          const rHasDisliked = rRx.dislikedBy.includes(CURRENT_USER);
+          
+          return `
           <div class="reply-item">
-            <b class="reply-author">${escapeHtml(r.author)}</b>
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <b class="reply-author">${escapeHtml(r.author)}</b>
+            </div>
             <span class="reply-content">${escapeHtml(r.content)}</span>
+            <div class="reply-actions">
+              <button class="reply-reaction-btn ${rHasLiked ? 'active-like' : ''}" data-type="like" data-reply-index="${index}">
+                👍 ${rRx.likedBy.length > 0 ? rRx.likedBy.length : ''}
+              </button>
+              <button class="reply-reaction-btn ${rHasDisliked ? 'active-dislike' : ''}" data-type="dislike" data-reply-index="${index}">
+                👎 ${rRx.dislikedBy.length > 0 ? rRx.dislikedBy.length : ''}
+              </button>
+            </div>
           </div>
-        `).join('');
+        `}).join('');
 
         return `<article class="entry-card" data-id="${escapeHtml(entry.id)}">
         <div class="entry-card-meta">
@@ -184,7 +199,7 @@ entryList.addEventListener('click', (event) => {
     }
   }
 
-  // Reaction
+  // Entry Reaction
   if (event.target.closest('.reaction-btn')) {
     const type = event.target.closest('.reaction-btn').dataset.type;
     const entries = loadEntries();
@@ -199,10 +214,8 @@ entryList.addEventListener('click', (event) => {
       
       const index = targetArray.indexOf(CURRENT_USER);
       if (index > -1) {
-        // 이미 눌렀으면 취소
         targetArray.splice(index, 1);
       } else {
-        // 안 눌렀으면 추가하고 반대편 취소
         targetArray.push(CURRENT_USER);
         const otherIndex = otherArray.indexOf(CURRENT_USER);
         if (otherIndex > -1) otherArray.splice(otherIndex, 1);
@@ -211,6 +224,37 @@ entryList.addEventListener('click', (event) => {
       saveEntries(entries);
       render();
     }
+    return;
+  }
+  
+  // Reply Reaction
+  if (event.target.closest('.reply-reaction-btn')) {
+    const btn = event.target.closest('.reply-reaction-btn');
+    const type = btn.dataset.type;
+    const replyIndex = parseInt(btn.dataset.replyIndex, 10);
+    
+    const entries = loadEntries();
+    const entry = entries.find(e => e.id === id);
+    if (entry && entry.replies && entry.replies[replyIndex]) {
+      const reply = entry.replies[replyIndex];
+      if (!reply.reactions) reply.reactions = { likedBy: [], dislikedBy: [] };
+      
+      const targetArray = type === 'like' ? reply.reactions.likedBy : reply.reactions.dislikedBy;
+      const otherArray = type === 'like' ? reply.reactions.dislikedBy : reply.reactions.likedBy;
+      
+      const rIdx = targetArray.indexOf(CURRENT_USER);
+      if (rIdx > -1) {
+        targetArray.splice(rIdx, 1);
+      } else {
+        targetArray.push(CURRENT_USER);
+        const otherIndex = otherArray.indexOf(CURRENT_USER);
+        if (otherIndex > -1) otherArray.splice(otherIndex, 1);
+      }
+      
+      saveEntries(entries);
+      render();
+    }
+    return;
   }
 
   // Reply Toggle
@@ -228,7 +272,11 @@ entryList.addEventListener('click', (event) => {
     const entry = entries.find(e => e.id === id);
     if (entry) {
       if (!entry.replies) entry.replies = [];
-      entry.replies.push({ author: CURRENT_USER, content });
+      entry.replies.push({ 
+        author: CURRENT_USER, 
+        content,
+        reactions: { likedBy: [], dislikedBy: [] }
+      });
       saveEntries(entries);
       render();
     }
