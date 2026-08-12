@@ -12,6 +12,7 @@ from app.models import (
     PlantSpecies,
     User,
 )
+from app.services.epithet_service import assign_plant_epithet
 
 
 class GiftApiTestCase(unittest.TestCase):
@@ -44,13 +45,14 @@ class GiftApiTestCase(unittest.TestCase):
             db.session.flush()
             plant = Plant(
                 species_id=species.id,
-                name="사랑을 담은 몬스테라",
+                name="몬스테라",
                 growth_score=100,
                 positive_energy=25,
                 negative_energy=5,
                 mood="기쁨",
                 status="GIFT_READY",
             )
+            assign_plant_epithet(plant)
             db.session.add(plant)
             db.session.flush()
             db.session.add(
@@ -119,6 +121,14 @@ class GiftApiTestCase(unittest.TestCase):
         )
 
     def test_gift_moves_ownership_and_preserves_history(self):
+        with self.app.app_context():
+            original = db.session.get(Plant, self.plant_id)
+            original_pair = (
+                original.epithet_first_id,
+                original.epithet_second_id,
+            )
+            original_display_name = original.display_name
+
         response = self._gift()
         self.assertEqual(response.status_code, 201)
         response_data = response.get_json()["data"]
@@ -136,7 +146,12 @@ class GiftApiTestCase(unittest.TestCase):
             self.assertEqual(ownerships[1].owner_user_id, self.recipient_id)
             self.assertEqual(ownerships[1].acquisition_type, "GIFT")
             self.assertEqual(ownerships[1].gift_id, gift_id)
-            self.assertEqual(db.session.get(Plant, self.plant_id).status, "GIFTED")
+            gifted_plant = db.session.get(Plant, self.plant_id)
+            self.assertEqual(gifted_plant.status, "GIFTED")
+            self.assertEqual(
+                (gifted_plant.epithet_first_id, gifted_plant.epithet_second_id),
+                original_pair,
+            )
             self.assertIsNotNone(ChatSession.query.one().ended_at)
 
         self.assertEqual(
@@ -149,6 +164,7 @@ class GiftApiTestCase(unittest.TestCase):
         self.assertEqual(plant["growthScore"], 100)
         self.assertEqual(plant["positiveEnergy"], 25)
         self.assertEqual(plant["mood"], "기쁨")
+        self.assertEqual(plant["displayName"], original_display_name)
         self.assertEqual(plant["receivedGift"]["message"], "소중히 키웠어")
 
         history = self.recipient_client.get(f"/api/chat/{self.plant_id}/messages")

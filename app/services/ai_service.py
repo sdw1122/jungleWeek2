@@ -112,6 +112,7 @@ def build_personality(
     pos_energy: int = 0,
     neg_energy: int = 0,
     latest_care_action: str | None = None,
+    plant_name: str | None = None,
 ) -> str:
     def safe_int(value) -> int:
         try:
@@ -152,7 +153,8 @@ def build_personality(
     )
 
     return (
-        f"현재 성장도는 {growth}이고, 모습과 정체성은 '{form_name}'이다. "
+        f"현재 성장도는 {growth}이고, 정체성은 "
+        f"'{form_name}인 {plant_name or '이름 없는 식물'}'이다. "
         f"{tone} {care_context} 성장 단계와 정체성을 말투와 비유에 자연스럽게 반영하되, "
         "매 답변마다 수식어를 그대로 반복하지 않는다."
     )
@@ -165,6 +167,7 @@ def analyze_chat(
     neg_energy: int = 0,
     growth_score: int = 0,
     latest_care_action: str | None = None,
+    plant_name: str | None = None,
 ) -> dict:
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key:
@@ -175,6 +178,7 @@ def analyze_chat(
         pos_energy,
         neg_energy,
         latest_care_action,
+        plant_name,
     )
 
     recent_history = "\n".join(
@@ -182,7 +186,7 @@ def analyze_chat(
         for item in (history or [])[-10:]
     )
     instructions = f"""
-너는 Farmda 서비스의 반려식물이다.
+너는 Farmda 서비스의 반려식물 '{plant_name or '이름 없는 식물'}'이다.
 {personality}
 사용자 메시지를 POSITIVE, NEGATIVE, NEUTRAL 중 하나로 분류한다.
 POSITIVE라면 긍정 영향도를 1~5로 판단하고 positive_delta에 기록하며 negative_delta는 0으로 둔다.

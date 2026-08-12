@@ -4,6 +4,10 @@ from flask_login import current_user, login_required
 from ..extensions import db
 from ..models import CareLog, ChatMessage, ChatSession, Plant, PlantOwnership, User
 from ..services.ai_service import analyze_chat
+from ..services.epithet_service import (
+    energy_polarity,
+    refresh_epithet_after_state_change,
+)
 
 
 chat_bp = Blueprint("chat", __name__, url_prefix="/api/chat")
@@ -102,6 +106,11 @@ def chat():
     if not row:
         return api_error("PLANT_NOT_FOUND", "식물을 찾을 수 없습니다.", 404)
     plant, ownership = row
+    previous_stage = plant.growth_stage
+    previous_polarity = energy_polarity(
+        plant.positive_energy,
+        plant.negative_energy,
+    )
 
     session = ChatSession.query.filter_by(
         plant_id=plant.id,
@@ -136,6 +145,7 @@ def chat():
         plant.negative_energy,
         plant.growth_score,
         latest_care.action_type if latest_care else None,
+        plant.display_name,
     )
 
     sentiment = str(ai_result.get("sentiment", "NEUTRAL")).upper()
@@ -160,6 +170,11 @@ def chat():
     plant.positive_energy += positive_delta
     plant.negative_energy += negative_delta
     plant.mood = emotion
+    refresh_epithet_after_state_change(
+        plant,
+        previous_stage=previous_stage,
+        previous_polarity=previous_polarity,
+    )
     db.session.commit()
 
     return jsonify(

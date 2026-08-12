@@ -13,7 +13,6 @@ const chatInput = document.querySelector('#chat-input');
 const actionButtons = document.querySelectorAll('[data-action]');
 const openGiftButton = document.querySelector('#open-gift');
 let nextBeforeMessageId = null;
-const prefixPattern = /^(사랑을 담은|행운의|감사의|건강을 기원하는|싱그러운|우리의|존경의|사랑의)\s*/;
 const seedStyles = {
   '몬스테라': 'monstera', '스투키': 'stucky', '산세베리아': 'sansevieria',
   '스킨답서스': 'pothos', '아레카야자': 'areca', '파키라': 'pachira',
@@ -145,9 +144,10 @@ function renderGrowth(animate = false) {
   if (!chosen) return;
   const total = chosen.growthScore;
   const stage = [...stages].reverse().find(item => total >= item.min);
-  const plantName = chosen.name.replace(prefixPattern, '');
+  const plantName = chosen.displayName || chosen.name;
+  const speciesName = chosen.speciesName || chosen.name;
   const isNegative = chosen.negativeEnergy > chosen.positiveEnergy;
-  const seedStyle = seedStyles[plantName] || 'monstera';
+  const seedStyle = seedStyles[speciesName] || 'monstera';
   const stageStyle = stageStyles[stage.name];
   const visualKey = `${seedStyle}-${stageStyle}-${isNegative ? 'wilted' : 'healthy'}`;
 
@@ -353,7 +353,7 @@ giftForm.addEventListener('submit', async event => {
       body: JSON.stringify({ recipientNickname: nickname, message })
     });
     document.querySelector('#gift-recipient').textContent = payload.data.gift.recipient.nickname;
-    document.querySelector('#gift-plant-name').textContent = chosen?.name || '식물';
+    document.querySelector('#gift-plant-name').textContent = chosen?.displayName || chosen?.name || '식물';
     document.querySelector('#gift-plant-icon').textContent = chosen?.emoji || '🪴';
     document.querySelector('#gift-sent-message').textContent = message;
     document.querySelector('#gift-form-view').hidden = true;
@@ -375,7 +375,7 @@ let receivedGift = null;
 function showReceivedGift(gift) {
   receivedGift = gift;
   document.querySelector('#received-gift-sender').textContent = gift.sender?.nickname || '친구';
-  document.querySelector('#received-gift-plant').textContent = chosen?.name || '식물';
+  document.querySelector('#received-gift-plant').textContent = chosen?.displayName || chosen?.name || '식물';
   document.querySelector('#received-gift-icon').textContent = chosen?.emoji || '🪴';
   document.querySelector('#received-gift-message').textContent = gift.message || '';
   document.querySelector('#received-gift-error').textContent = '';

@@ -42,12 +42,17 @@ class AiServiceTestCase(unittest.TestCase):
                 0,
                 45,
                 "SUNLIGHT",
+                "찬란한 새벽의 몬스테라",
             )
 
         self.assertEqual(result["sentiment"], "POSITIVE")
         self.assertEqual(result["positive_delta"], 4)
         request = client.responses.create.call_args.kwargs
         self.assertIn("희망을 품은 봉오리", request["instructions"])
+        self.assertIn(
+            "희망을 품은 봉오리인 찬란한 새벽의 몬스테라",
+            request["instructions"],
+        )
         self.assertIn("현재 성장도는 45", request["instructions"])
         self.assertIn("가장 최근 돌봄 행동은 '햇빛 쬐어주기'", request["instructions"])
         self.assertEqual(request["model"], "gpt-5.6-luna")
@@ -83,13 +88,29 @@ class AiServiceTestCase(unittest.TestCase):
         self.assertEqual(neutral["negative_delta"], 0)
 
     def test_personality_uses_growth_stage_and_energy_balance(self):
-        negative_bud = build_personality(45, 10, 20, "IGNORE")
-        positive_flower = build_personality(70, 20, 20)
+        negative_bud = build_personality(
+            45,
+            10,
+            20,
+            "IGNORE",
+            "뒤틀린 황천의 몬스테라",
+        )
+        positive_flower = build_personality(
+            70,
+            20,
+            20,
+            plant_name="찬란한 새벽의 몬스테라",
+        )
 
         self.assertIn("뒤틀린 황천의 봉오리", negative_bud)
+        self.assertIn(
+            "뒤틀린 황천의 봉오리인 뒤틀린 황천의 몬스테라",
+            negative_bud,
+        )
         self.assertIn("까칠하고 적대적인 반려식물", negative_bud)
         self.assertIn("가장 최근 돌봄 행동은 '방치하기'", negative_bud)
         self.assertIn("축복의 꽃", positive_flower)
+        self.assertIn("축복의 꽃인 찬란한 새벽의 몬스테라", positive_flower)
         self.assertIn("밝고 긍정적이며 다정하다", positive_flower)
         self.assertIn("아직 기록된 돌봄 행동은 없다", positive_flower)
 

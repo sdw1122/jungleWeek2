@@ -2,7 +2,14 @@ import unittest
 
 from app import create_app
 from app.extensions import db
-from app.models import CareLog, Plant, PlantOwnership, PlantSpecies, User
+from app.models import (
+    CareLog,
+    Plant,
+    PlantEpithetFragment,
+    PlantOwnership,
+    PlantSpecies,
+    User,
+)
 
 
 class PlantApiTestCase(unittest.TestCase):
@@ -67,7 +74,7 @@ class PlantApiTestCase(unittest.TestCase):
             headers={"X-CSRF-Token": self._csrf(active_client)},
         )
 
-    def _create_plant(self, name="사랑을 담은 몬스테라", client=None):
+    def _create_plant(self, name="몬스테라", client=None):
         return self._post(
             "/api/v1/plants",
             {
@@ -88,6 +95,14 @@ class PlantApiTestCase(unittest.TestCase):
         self.assertEqual(plant_data["stageLabel"], "씨앗")
         self.assertEqual(plant_data["emoji"], "🌿")
         self.assertIsNone(plant_data["mood"])
+        self.assertEqual(plant_data["name"], "몬스테라")
+        self.assertEqual(plant_data["epithet"]["polarity"], "POSITIVE")
+        self.assertTrue(plant_data["displayName"].endswith(" 몬스테라"))
+        self.assertEqual(
+            plant_data["displayName"],
+            f'{plant_data["epithet"]["first"]} '
+            f'{plant_data["epithet"]["second"]} 몬스테라',
+        )
 
         list_response = self.client.get("/api/v1/plants")
         self.assertEqual(list_response.status_code, 200)
@@ -96,6 +111,7 @@ class PlantApiTestCase(unittest.TestCase):
         with self.app.app_context():
             self.assertEqual(Plant.query.count(), 1)
             self.assertEqual(PlantSpecies.query.count(), 1)
+            self.assertEqual(PlantEpithetFragment.query.count(), 48)
             ownership = PlantOwnership.query.one()
             self.assertEqual(ownership.owner_user_id, self.user_id)
             self.assertIsNone(ownership.ended_at)
@@ -177,6 +193,63 @@ class PlantApiTestCase(unittest.TestCase):
             log = CareLog.query.order_by(CareLog.id.desc()).first()
             self.assertEqual(log.growth_delta, 0)
             self.assertEqual(log.positive_delta, 5)
+
+    def test_stage_change_refreshes_epithet_once(self):
+        plant_id = self._create_plant().get_json()["data"]["plant"]["id"]
+        with self.app.app_context():
+            plant = db.session.get(Plant, plant_id)
+            previous_pair = (plant.epithet_first_id, plant.epithet_second_id)
+
+        response = self._post(
+            f"/api/v1/plants/{plant_id}/care",
+            {"actionType": "WATER"},
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()["data"]["plant"]
+        self.assertEqual(data["growthStage"], "COTYLEDON")
+        self.assertEqual(data["epithet"]["polarity"], "POSITIVE")
+        with self.app.app_context():
+            plant = db.session.get(Plant, plant_id)
+            self.assertNotEqual(
+                (plant.epithet_first_id, plant.epithet_second_id),
+                previous_pair,
+            )
+
+    def test_polarity_flip_refreshes_epithet_within_same_stage(self):
+        plant_id = self._create_plant().get_json()["data"]["plant"]["id"]
+        with self.app.app_context():
+            plant = db.session.get(Plant, plant_id)
+            plant.growth_score = 5
+            db.session.commit()
+
+        response = self._post(
+            f"/api/v1/plants/{plant_id}/care",
+            {"actionType": "IGNORE"},
+        )
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()["data"]["plant"]
+        self.assertEqual(data["growthStage"], "COTYLEDON")
+        self.assertEqual(data["epithet"]["polarity"], "NEGATIVE")
+
+    def test_same_stage_and_polarity_keep_epithet(self):
+        plant_id = self._create_plant().get_json()["data"]["plant"]["id"]
+        with self.app.app_context():
+            plant = db.session.get(Plant, plant_id)
+            plant.growth_score = 5
+            previous_pair = (plant.epithet_first_id, plant.epithet_second_id)
+            db.session.commit()
+
+        response = self._post(
+            f"/api/v1/plants/{plant_id}/care",
+            {"actionType": "WATER"},
+        )
+        self.assertEqual(response.status_code, 200)
+        with self.app.app_context():
+            plant = db.session.get(Plant, plant_id)
+            self.assertEqual(
+                (plant.epithet_first_id, plant.epithet_second_id),
+                previous_pair,
+            )
 
     def test_plant_api_requires_login_and_csrf(self):
         anonymous = self.app.test_client()

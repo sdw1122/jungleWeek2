@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, func
+from sqlalchemy import CheckConstraint, UniqueConstraint, func
 
 from ..extensions import db
 
@@ -26,6 +26,38 @@ class PlantSpecies(db.Model):
         nullable=False,
         server_default=func.now(),
         onupdate=func.now(),
+    )
+
+
+class PlantEpithetFragment(db.Model):
+    __tablename__ = "plant_epithet_fragments"
+    __table_args__ = (
+        CheckConstraint(
+            "slot IN ('FIRST', 'SECOND')",
+            name="chk_plant_epithet_fragments_slot",
+        ),
+        CheckConstraint(
+            "polarity IN ('POSITIVE', 'NEGATIVE')",
+            name="chk_plant_epithet_fragments_polarity",
+        ),
+        UniqueConstraint(
+            "slot",
+            "polarity",
+            "text",
+            name="uq_plant_epithet_fragment",
+        ),
+    )
+
+    id = db.Column(
+        db.BigInteger().with_variant(db.Integer, "sqlite"),
+        primary_key=True,
+    )
+    slot = db.Column(db.String(10), nullable=False)
+    polarity = db.Column(db.String(10), nullable=False)
+    text = db.Column(db.String(40), nullable=False)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    created_at = db.Column(
+        db.DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
 
@@ -56,6 +88,16 @@ class Plant(db.Model):
         db.ForeignKey("plant_species.id", ondelete="RESTRICT"),
         nullable=False,
     )
+    epithet_first_id = db.Column(
+        db.BigInteger().with_variant(db.Integer, "sqlite"),
+        db.ForeignKey("plant_epithet_fragments.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    epithet_second_id = db.Column(
+        db.BigInteger().with_variant(db.Integer, "sqlite"),
+        db.ForeignKey("plant_epithet_fragments.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
     name = db.Column(db.String(50), nullable=False)
     growth_score = db.Column(db.SmallInteger, nullable=False, default=0)
     positive_energy = db.Column(db.Integer, nullable=False, default=0)
@@ -76,6 +118,32 @@ class Plant(db.Model):
     )
 
     species = db.relationship(PlantSpecies, lazy="joined")
+    epithet_first = db.relationship(
+        PlantEpithetFragment,
+        foreign_keys=[epithet_first_id],
+        lazy="joined",
+    )
+    epithet_second = db.relationship(
+        PlantEpithetFragment,
+        foreign_keys=[epithet_second_id],
+        lazy="joined",
+    )
+
+    @property
+    def epithet_polarity(self) -> str | None:
+        if self.epithet_first and self.epithet_second:
+            if self.epithet_first.polarity == self.epithet_second.polarity:
+                return self.epithet_first.polarity
+        return None
+
+    @property
+    def display_name(self) -> str:
+        parts = [
+            self.epithet_first.text if self.epithet_first else None,
+            self.epithet_second.text if self.epithet_second else None,
+            self.name,
+        ]
+        return " ".join(part for part in parts if part)
 
     @property
     def growth_stage(self) -> str:
@@ -100,6 +168,14 @@ class Plant(db.Model):
         return {
             "id": self.id,
             "name": self.name,
+            "displayName": self.display_name,
+            "epithet": {
+                "first": self.epithet_first.text,
+                "second": self.epithet_second.text,
+                "polarity": self.epithet_polarity,
+            }
+            if self.epithet_first and self.epithet_second
+            else None,
             "speciesName": self.species.name if self.species else None,
             "category": self.species.category if self.species else None,
             "emoji": self.species.emoji if self.species else None,

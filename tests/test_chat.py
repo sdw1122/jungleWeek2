@@ -12,6 +12,7 @@ from app.models import (
     PlantSpecies,
     User,
 )
+from app.services.epithet_service import assign_plant_epithet
 
 
 class ChatApiTestCase(unittest.TestCase):
@@ -35,6 +36,7 @@ class ChatApiTestCase(unittest.TestCase):
             db.session.add(species)
             db.session.flush()
             plant = Plant(species_id=species.id, name="몬스테라", mood="POSITIVE")
+            assign_plant_epithet(plant)
             db.session.add(plant)
             db.session.flush()
             db.session.add(
@@ -118,7 +120,15 @@ class ChatApiTestCase(unittest.TestCase):
         self.assertEqual(payload["plant"]["growthScore"], 0)
         self.assertEqual(payload["plant"]["positiveEnergy"], 4)
         self.assertEqual(payload["plant"]["mood"], "기쁨")
-        analyze_chat.assert_called_once_with("예쁘게 자라줘", [], 0, 0, 0, "IGNORE")
+        analyze_chat.assert_called_once_with(
+            "예쁘게 자라줘",
+            [],
+            0,
+            0,
+            0,
+            "IGNORE",
+            payload["plant"]["displayName"],
+        )
 
         with self.app.app_context():
             self.assertEqual(ChatSession.query.count(), 1)
@@ -141,6 +151,26 @@ class ChatApiTestCase(unittest.TestCase):
 
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.get_json()["error"]["code"], "PLANT_NOT_FOUND")
+
+    @patch(
+        "app.routes.chat.analyze_chat",
+        return_value={
+            "sentiment": "NEGATIVE",
+            "response": "흥, 이제야 말을 거는 거야?",
+            "emotion": "짜증",
+            "positive_delta": 0,
+            "negative_delta": 5,
+        },
+    )
+    def test_chat_polarity_flip_refreshes_epithet(self, analyze_chat):
+        response = self._chat(message="못생겼어")
+
+        self.assertEqual(response.status_code, 200)
+        plant = response.get_json()["plant"]
+        self.assertEqual(plant["growthStage"], "SEED")
+        self.assertEqual(plant["epithet"]["polarity"], "NEGATIVE")
+        self.assertEqual(plant["negativeEnergy"], 5)
+        analyze_chat.assert_called_once()
 
     def test_chat_requires_login_csrf_and_valid_message(self):
         anonymous = self.app.test_client()

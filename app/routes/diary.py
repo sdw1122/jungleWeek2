@@ -312,7 +312,7 @@ def diary_draft(plant_id: int):
     today = _seoul_today()
     summary, messages, latest_care = _collect_activity(plant.id, today)
     draft = generate_diary_draft(
-        plant_name=plant.name,
+        plant_name=plant.display_name,
         mood=plant.mood,
         growth_score=plant.growth_score,
         positive_energy=plant.positive_energy,

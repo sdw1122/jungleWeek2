@@ -181,7 +181,7 @@ function renderEntry(entry) {
   document.querySelector('#entry-date').textContent = formatDate(entry.diaryDate);
   document.querySelector('#paper-entry-title').textContent = entry.title;
   document.querySelector('#paper-growth-copy').textContent = `성장도 ${entry.growthScore} · ${entry.mood || '평온한 마음'}`;
-  document.querySelector('#paper-sign').textContent = `- ${selectedPlant.name}가 쓴 성장일기 · ${entry.author?.nickname || '주인'} -`;
+  document.querySelector('#paper-sign').textContent = `- ${selectedPlant.displayName || selectedPlant.name}가 쓴 성장일기 · ${entry.author?.nickname || '주인'} -`;
   document.querySelector('#edit-entry').hidden = !entry.canEdit;
   const paragraphs = entry.content.split(/\n+/).filter(Boolean);
   document.querySelector('#entry-content').innerHTML = (paragraphs.length ? paragraphs : [entry.content])
@@ -272,7 +272,7 @@ async function loadMonth(preferredDate = null) {
 }
 
 function updatePlantHeader() {
-  document.querySelector('#diary-plant-name').textContent = selectedPlant.name;
+  document.querySelector('#diary-plant-name').textContent = selectedPlant.displayName || selectedPlant.name;
   document.querySelector('#diary-plant-icon').textContent = selectedPlant.emoji || '🪴';
   document.querySelector('#paper-plant-icon').textContent = selectedPlant.emoji || '🪴';
   document.querySelector('#diary-plant-meta').textContent = selectedPlant.accessType === 'OWNER'
@@ -308,7 +308,7 @@ async function loadPlants() {
       return;
     }
     plantSelect.innerHTML = plants.map(plant => (
-      `<option value="${plant.id}">${escapeHtml(plant.name)}${plant.accessType === 'AUTHOR_ARCHIVE' ? ' · 보관 기록' : ''}</option>`
+      `<option value="${plant.id}">${escapeHtml(plant.displayName || plant.name)}${plant.accessType === 'AUTHOR_ARCHIVE' ? ' · 보관 기록' : ''}</option>`
     )).join('');
     const requestedId = Number(new URLSearchParams(location.search).get('plantId'));
     await choosePlant(requestedId);

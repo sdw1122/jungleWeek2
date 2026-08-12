@@ -4,6 +4,11 @@ from sqlalchemy.exc import IntegrityError
 
 from ..extensions import db
 from ..models import CareLog, Gift, Plant, PlantOwnership, PlantSpecies
+from ..services.epithet_service import (
+    assign_plant_epithet,
+    energy_polarity,
+    refresh_epithet_after_state_change,
+)
 
 
 plants_bp = Blueprint("plants", __name__, url_prefix="/api/v1/plants")
@@ -116,6 +121,7 @@ def create_plant():
         mood=None,
         status="GROWING",
     )
+    assign_plant_epithet(plant)
     db.session.add(plant)
     db.session.flush()
     ownership = PlantOwnership(
@@ -173,6 +179,11 @@ def care_for_plant(plant_id: int):
         return api_error("PLANT_NOT_FOUND", "식물을 찾을 수 없습니다.", 404)
     plant, ownership = row
     previous_score = plant.growth_score
+    previous_stage = plant.growth_stage
+    previous_polarity = energy_polarity(
+        plant.positive_energy,
+        plant.negative_energy,
+    )
     is_negative = action_type == "IGNORE"
     positive_delta = 0 if is_negative else 5
     negative_delta = 5 if is_negative else 0
@@ -181,6 +192,11 @@ def care_for_plant(plant_id: int):
     plant.negative_energy += negative_delta
     if previous_score < 100 and plant.growth_score >= 100:
         plant.status = "GIFT_READY"
+    refresh_epithet_after_state_change(
+        plant,
+        previous_stage=previous_stage,
+        previous_polarity=previous_polarity,
+    )
 
     db.session.add(
         CareLog(

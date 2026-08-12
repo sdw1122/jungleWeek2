@@ -34,7 +34,7 @@ function renderPlants(plants) {
     const card = document.createElement('article');
     card.className = 'plant-card';
     card.tabIndex = 0;
-    card.innerHTML = `<div class="plant-photo"><span>${escapeHtml(plant.emoji || '🌱')}</span></div><div class="plant-body"><div class="plant-top"><div><small>PLANT ${String(index + 1).padStart(2, '0')}</small><h2>${escapeHtml(plant.name || '식물')}</h2></div><span class="stage-badge">${escapeHtml(plant.stageLabel)} 단계</span></div><div class="plant-energy"><span>성장 에너지</span><b>${energy} / 100</b></div><div class="energy-track"><i style="width:${energy}%"></i></div><div class="plant-enter"><span>상태창 들어가기</span><b>→</b></div></div>`;
+    card.innerHTML = `<div class="plant-photo"><span>${escapeHtml(plant.emoji || '🌱')}</span></div><div class="plant-body"><div class="plant-top"><div><small>PLANT ${String(index + 1).padStart(2, '0')}</small><h2>${escapeHtml(plant.displayName || plant.name || '식물')}</h2></div><span class="stage-badge">${escapeHtml(plant.stageLabel)} 단계</span></div><div class="plant-energy"><span>성장 에너지</span><b>${energy} / 100</b></div><div class="energy-track"><i style="width:${energy}%"></i></div><div class="plant-enter"><span>상태창 들어가기</span><b>→</b></div></div>`;
     if (plant.imageUrl) {
       const photo = card.querySelector('.plant-photo');
       photo.style.backgroundImage = `url("${plant.imageUrl}")`;

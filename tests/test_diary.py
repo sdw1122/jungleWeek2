@@ -16,6 +16,7 @@ from app.models import (
     PlantSpecies,
     User,
 )
+from app.services.epithet_service import assign_plant_epithet
 from app.services.diary_service import generate_diary_draft
 
 
@@ -51,13 +52,14 @@ class DiaryApiTestCase(unittest.TestCase):
             db.session.flush()
             plant = Plant(
                 species_id=species.id,
-                name="사랑을 담은 몬스테라",
+                name="몬스테라",
                 growth_score=45,
                 positive_energy=20,
                 negative_energy=5,
                 mood="기쁨",
                 status="GROWING",
             )
+            assign_plant_epithet(plant)
             db.session.add(plant)
             db.session.flush()
             db.session.add(
@@ -224,6 +226,9 @@ class DiaryApiTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         draft = response.get_json()["data"]["draft"]
         self.assertEqual(draft["title"], "물을 마신 날")
+        with self.app.app_context():
+            expected_name = db.session.get(Plant, self.plant_id).display_name
+        self.assertEqual(generator.call_args.kwargs["plant_name"], expected_name)
         summary = generator.call_args.kwargs["activity_summary"]
         self.assertEqual(summary["careActions"][0]["actionType"], "WATER")
         self.assertEqual(summary["totals"]["positiveDelta"], 8)

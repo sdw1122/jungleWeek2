@@ -80,6 +80,7 @@ def generate_diary_draft(
         positive_energy,
         negative_energy,
         latest_care_action,
+        plant_name,
     )
     activity_text = json.dumps(activity_summary, ensure_ascii=False)
     conversation = "\n".join(
