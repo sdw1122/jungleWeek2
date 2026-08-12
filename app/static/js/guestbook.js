@@ -1,5 +1,5 @@
 const STORAGE_KEY = 'farmda_guestbook_entries';
-const CURRENT_USER = '초록잎정민'; // 현재 로그인한 내 닉네임 (실제 연동 시 세션에서 받아옴)
+const CURRENT_USER = '나'; // 현재 로그인한 내 닉네임 (실제 연동 시 세션에서 받아옴)
 
 function loadEntries() {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -13,7 +13,7 @@ function loadEntries() {
   const seed = [
     {
       id: 'seed-3',
-      author: '몬스테라집사',
+      author: '나',
       content: '식물 덕분에 아침마다 웃게 돼요. 다들 오늘도 좋은 하루 보내세요 🌱',
       createdAt: Date.now() - 1000 * 60 * 40,
       reactions: { likedBy: [], dislikedBy: [] },
@@ -104,6 +104,14 @@ function render() {
         </div>
         <p class="entry-content">${escapeHtml(entry.content)}</p>
         
+        <div class="inline-edit-container">
+          <textarea class="inline-edit-textarea">${escapeHtml(entry.content)}</textarea>
+          <div class="inline-edit-actions">
+            <button class="inline-btn-cancel">취소</button>
+            <button class="inline-btn-save">저장</button>
+          </div>
+        </div>
+        
         <div class="entry-actions">
             <button class="reaction-btn ${hasLiked ? 'active-like' : ''}" data-type="like">
               👍 좋아요 ${rx.likedBy.length > 0 ? rx.likedBy.length : ''}
@@ -141,16 +149,33 @@ entryList.addEventListener('click', (event) => {
     render();
   }
   
-  // Edit
+  // Edit (Show Inline Form)
   if (event.target.closest('.entry-edit')) {
     const contentP = card.querySelector('.entry-content');
-    const oldContent = contentP.innerText;
-    const newContent = prompt('수정할 내용을 입력하세요:', oldContent);
-    if (newContent !== null && newContent.trim() !== '') {
+    const editContainer = card.querySelector('.inline-edit-container');
+    
+    contentP.style.display = 'none';
+    editContainer.classList.add('active');
+    editContainer.querySelector('.inline-edit-textarea').focus();
+  }
+  
+  // Edit Cancel
+  if (event.target.closest('.inline-btn-cancel')) {
+    const contentP = card.querySelector('.entry-content');
+    const editContainer = card.querySelector('.inline-edit-container');
+    
+    contentP.style.display = 'block';
+    editContainer.classList.remove('active');
+  }
+
+  // Edit Save
+  if (event.target.closest('.inline-btn-save')) {
+    const newContent = card.querySelector('.inline-edit-textarea').value.trim();
+    if (newContent) {
       const entries = loadEntries();
       const entry = entries.find(e => e.id === id);
       if (entry) {
-        entry.content = newContent.trim();
+        entry.content = newContent;
         saveEntries(entries);
         render();
       }
