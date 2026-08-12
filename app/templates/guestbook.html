@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
@@ -11,9 +11,10 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../css/back-nav.css" />
-    <link rel="stylesheet" href="../css/guestbook.css" />
+    <link rel="stylesheet" href="../css/guestbook.css?v=4" />
   </head>
   <body>
+    {% include "_global_nav.html" %}
     <a class="back-to-dashboard" href="dashboard-v2.html">← 식물 키우기로 돌아가기</a>
 
     <main class="guestbook-main">
@@ -57,6 +58,7 @@
       </div>
     </div>
 
-    <script src="../js/guestbook.js"></script>
+    <script src="../js/guestbook.js?v=4"></script>
   </body>
 </html>
+

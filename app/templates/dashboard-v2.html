@@ -10,20 +10,55 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css?v=4">
   <link rel="stylesheet" href="../css/dashboard-fixes.css?v=4">
-  <link rel="stylesheet" href="../css/growth-stages.css?v=5">
+  <link rel="stylesheet" href="../css/growth-stages.css?v=10">
+  <link rel="stylesheet" href="../css/growth-polish.css?v=1">
+  <link rel="stylesheet" href="../css/dracaena-fix.css?v=1">
+  <link rel="stylesheet" href="../css/hoya-fix.css?v=1">
+  <link rel="stylesheet" href="../css/calathea-fix.css?v=1">
+  <link rel="stylesheet" href="../css/ficus-fix.css?v=1">
+  <link rel="stylesheet" href="../css/lucky-bamboo-fix.css?v=1">
+  <link rel="stylesheet" href="../css/succulent-fix.css?v=1">
+  <link rel="stylesheet" href="../css/monstera-fix.css?v=1">
+  <link rel="stylesheet" href="../css/stucky-fix.css?v=1">
+  <link rel="stylesheet" href="../css/sansevieria-fix.css?v=1">
+  <link rel="stylesheet" href="../css/pothos-fix.css?v=1">
+  <link rel="stylesheet" href="../css/areca-fix.css?v=1">
+  <link rel="stylesheet" href="../css/pachira-fix.css?v=1">
+  <link rel="stylesheet" href="../css/rubber-tree-fix.css?v=1">
+  <link rel="stylesheet" href="../css/peace-lily-fix.css?v=1">
+  <link rel="stylesheet" href="../css/ivy-fix.css?v=1">
+  <link rel="stylesheet" href="../css/philodendron-fix.css?v=1">
+  <link rel="stylesheet" href="../css/parlor-palm-fix.css?v=1">
+  <link rel="stylesheet" href="../css/maidenhair-fix.css?v=1">
+  <link rel="stylesheet" href="../css/gift-card.css?v=1">
+  <style>
+    .gift-form-view[hidden]{display:none}
+    .open-gift{position:absolute;z-index:5;bottom:42px;padding:14px 22px;border:0;border-radius:999px;background:#173e28;color:#fff;font:800 14px "Noto Sans KR",sans-serif;box-shadow:0 12px 28px rgba(23,62,40,.24);cursor:pointer}
+    .open-gift[hidden],.load-older-messages[hidden]{display:none}
+    .load-older-messages{display:block;margin:0 auto 18px;padding:8px 14px;border:1px solid #d5e2d9;border-radius:999px;background:#fff;color:#42624d;font:700 11px "Noto Sans KR",sans-serif;cursor:pointer}
+    .message-speaker{display:block;margin:0 4px 3px;color:#738078;font-size:9px;font-weight:700}
+    .message-row.user{display:flex;flex-direction:column;align-items:flex-end}.message-row.plant{display:flex;flex-direction:column;align-items:flex-start}.message-row p{margin-left:0!important;margin-right:0!important}
+    .received-gift-card{text-align:center}.received-gift-card h2 strong{color:#178c4a}.received-gift-card blockquote{min-height:45px;margin:14px 0 18px;padding:14px 17px;border-radius:14px;background:#f7f7f4;color:#657068;font-size:12px;line-height:1.65;text-align:left}.received-gift-card blockquote:empty{display:none}.received-gift-error{min-height:18px;margin:0 0 8px;color:#d84d48;font-size:12px}
+    .profile-toggle-avatar{position:absolute;inset:0;display:grid;place-items:center;overflow:visible;border-radius:50%}.profile-toggle-avatar img{width:100%;height:100%;border-radius:inherit;object-fit:cover}.profile-gift-indicator{position:absolute;right:-18px;top:-9px;padding:4px 7px;border:2px solid #fff;border-radius:999px;background:#ffeed0;color:#9a5700;font-size:9px;font-style:normal;font-weight:900;white-space:nowrap}.profile-gift-indicator[hidden]{display:none!important}.profile-card-head>span{overflow:hidden}.profile-card-head>span img{width:100%;height:100%;object-fit:cover}
+  </style>
   <link rel="stylesheet" href="../css/dashboard-nav.css?v=2">
 </head>
 <body>
 <main class="dashboard">
   <aside class="status-panel">
     <div class="status-heading">
-      <h1>🌱 <span>상태창</span></h1>
-      <button class="profile-toggle" id="profile-toggle" type="button" aria-expanded="false" aria-controls="profile-card" aria-label="Farmda 메뉴 열기">F</button>
+      <h1>🌱 <span>FARMADA</span></h1>
+      <button class="profile-toggle" id="profile-toggle" type="button" aria-expanded="false" aria-controls="profile-card" aria-label="{{ current_user.nickname }}님의 Farmda 메뉴 열기">
+        <span class="profile-toggle-avatar">
+          {% if current_user.profile_image_url %}<img src="{{ current_user.profile_image_url }}" alt="{{ current_user.nickname }} 프로필 사진">{% else %}{{ current_user.nickname[:1] | upper }}{% endif %}
+          <i class="profile-gift-indicator" id="profile-gift-indicator" {% if not unread_gift_count %}hidden{% endif %}>🎁 선물</i>
+        </span>
+      </button>
     </div>
     <aside class="profile-card" id="profile-card" hidden>
-      <div class="profile-card-head"><span>F</span><div><strong>Farmda</strong><small>나의 식물 공간</small></div></div>
+      <div class="profile-card-head"><span>{% if current_user.profile_image_url %}<img src="{{ current_user.profile_image_url }}" alt="">{% else %}{{ current_user.nickname[:1] | upper }}{% endif %}</span><div><strong>{{ current_user.nickname }}</strong><small>나의 식물 공간</small></div></div>
       <nav aria-label="Farmda 메뉴">
-        <a href="diary.html"><span>📔</span><b>성장일기</b></a>
+        <a href="diary.html" id="diary-link"><span>📔</span><b>성장일기</b></a>
         <a href="dictionary.html"><span>🌿</span><b>식물백과</b></a>
         <a href="my-plants.html"><span>🪴</span><b>내가 키우고 있는 식물</b></a>
         <a href="guestbook.html"><span>💌</span><b>방명록</b></a>
@@ -33,7 +68,7 @@
     <section class="plant-chip"><div class="mini-seed" id="mini-stage">🌰</div><div><h2>식물</h2><p id="stage-label">씨앗 단계</p></div></section>
     <section class="energy-card">
       <h3>⚡ 에너지 상태</h3>
-      <div class="energy-title"><b>전체 성장 에너지</b><b><span id="total">0</span> / 100</b></div>
+      <div class="energy-title"><b>성장도</b><b><span id="total">0</span> / 100</b></div>
       <div class="progress gray"><i id="total-bar"></i></div>
       <p class="next">다음 진화까지: <b id="next">5</b></p><hr>
       <div class="energy-title pink"><b>💖 긍정 에너지</b><b id="positive">0</b></div><div class="progress soft-pink"><i id="positive-bar"></i></div>
@@ -41,24 +76,54 @@
     </section>
     <section class="mood"><h3>현재 식물의 기분/성향</h3><p id="mood-copy">아직 싹을 틔우기 전입니다. 버튼을 눌러 돌봐주세요!</p></section>
   </aside>
-  <section class="garden"><h2 id="plant-name">식물</h2><div class="stage-plant" id="seed" aria-live="polite">🌰</div><div class="shadow"></div></section>
+  <section class="garden"><h2 id="plant-name">식물</h2><div class="stage-plant" id="seed" aria-live="polite">🌰</div><div class="shadow"></div><button class="open-gift" id="open-gift" type="button" hidden>🎁 이 식물 선물하기</button></section>
   <section class="conversation">
     <header><div class="bubble-icon">💬</div><div><h2>식물과 소통하기</h2><p>돌보기 액션이나 대화를 통해 성장을 도와주세요.</p></div></header>
-    <div class="messages" id="messages"><p>씨앗이 심어졌습니다. 먼저 정성껏 돌봐주세요!</p></div>
-    <div class="actions" id="seed-actions"><button data-action="water">💧 물 주기 (+5)</button><button data-action="sun">🌞 햇빛 쬐어주기 (+5)</button><button data-action="pet">✋ 쓰다듬기 (+5)</button><button class="neg" data-action="ignore">🌫️ 방치하기 (+5 부정)</button><small>씨앗 단계에서는 버튼으로 첫 싹을 틔워주세요.</small></div>
-    <form class="chat-composer" id="chat-form" hidden><label for="chat-input">식물에게 말 걸기</label><div><input id="chat-input" type="text" maxlength="120" placeholder="따뜻한 말을 건네보세요…" autocomplete="off" required><button type="submit" aria-label="메시지 보내기">➤</button></div><small>떡잎 단계부터 대화를 통해 식물이 성장해요.</small></form>
+    <div class="messages" id="messages"><button class="load-older-messages" id="load-older-messages" type="button" hidden>이전 대화 불러오기</button><div id="message-list"><p class="narration">씨앗이 심어졌습니다.<br>먼저 정성껏 돌봐주세요!</p></div></div>
+    <div class="actions" id="seed-actions"><button data-action="water">💧 물 주기 (+5)</button><button data-action="sun">🌞 햇빛 쬐어주기 (+5)</button><button data-action="pet">✋ 쓰다듬기 (+5)</button><button class="neg" data-action="ignore">🌫️ 방치하기 (+5 부정)</button><small>성장 단계와 관계없이 돌봄 행동을 선택할 수 있어요.</small></div>
+    <form class="chat-composer" id="chat-form" hidden><label for="chat-input">식물에게 말 걸기</label><div><input id="chat-input" type="text" maxlength="120" placeholder="따뜻한 말을 건네보세요…" autocomplete="off" required><button type="submit" aria-label="메시지 보내기">➤</button></div><small>대화 내용에 따라 긍정 또는 부정 에너지가 변해요.</small></form>
   </section>
 </main>
 <div class="growth-modal" id="growth-modal" hidden role="dialog" aria-modal="true" aria-labelledby="growth-modal-title">
   <div class="growth-modal-backdrop"></div>
   <section class="growth-modal-card">
-    <div class="celebration" aria-hidden="true">🎉</div>
-    <p class="modal-label">GROWTH COMPLETE</p>
-    <h2 id="growth-modal-title">축하합니다!<br>다 키우셨어요~</h2>
-    <p>진짜 사랑하는 사람에게 식물을 선물하고 싶으시면<br><strong>카카오톡 선물하기</strong>를 눌러주세요!</p>
-    <a class="kakao-gift" href="https://gift.kakao.com" target="_blank" rel="noopener noreferrer"><span>💬</span> 카카오톡 선물하기</a>
-    <button class="modal-later" type="button">조금 더 둘러볼게요</button>
+    <div class="gift-form-view" id="gift-form-view">
+      <div class="celebration" aria-hidden="true">🎁</div>
+      <p class="modal-label">GROWTH COMPLETE</p>
+      <h2 id="growth-modal-title">정성껏 키운 식물을<br>선물해보세요</h2>
+      <p class="gift-intro">Farmda에서 함께하는 친구의 닉네임과<br>전하고 싶은 마음을 적어주세요.</p>
+      <form class="gift-form" id="gift-form" novalidate>
+        <label for="gift-nickname"><span>선물할 닉네임</span><small>필수</small></label>
+        <div class="nickname-field"><b>@</b><input id="gift-nickname" name="nickname" type="text" minlength="2" maxlength="50" placeholder="Farmda 닉네임을 입력하세요" autocomplete="off" required></div>
+        <p class="field-help">게임 안에서 사용하는 정확한 닉네임을 입력해주세요.</p>
+        <label for="gift-message"><span>선물할 때 메시지</span><small>선택</small></label>
+        <textarea id="gift-message" name="message" maxlength="200" rows="4" placeholder="예쁘게 키운 식물이야. 너에게 좋은 일이 가득하길 바라!"></textarea>
+        <div class="message-meta"><span id="gift-error" role="alert"></span><b><i id="gift-message-count">0</i> / 200</b></div>
+        <button class="gift-submit" type="submit"><span>🌿</span><b>이 식물 선물하기</b><i>→</i></button>
+      </form>
+      <button class="modal-later" type="button">조금 더 돌봐볼게요</button>
+    </div>
+    <div class="gift-success" id="gift-success" hidden>
+      <div class="gift-success-icon">💌</div>
+      <p class="modal-label">GIFT READY</p>
+      <h2><strong id="gift-recipient"></strong>님에게<br>마음을 전했어요!</h2>
+      <div class="gift-ticket"><span id="gift-plant-icon">🪴</span><div><small>보낸 식물</small><b id="gift-plant-name">식물</b></div></div>
+      <blockquote id="gift-sent-message"></blockquote>
+      <button class="gift-done" type="button">확인</button>
+    </div>
   </section>
 </div>
-<script src="../js/dashboard.js?v=7"></script>
+<div class="growth-modal" id="received-gift-modal" hidden role="dialog" aria-modal="true" aria-labelledby="received-gift-title">
+  <div class="growth-modal-backdrop"></div>
+  <section class="growth-modal-card received-gift-card">
+    <div class="gift-success-icon">🎁</div>
+    <p class="modal-label">A GIFT FOR YOU</p>
+    <h2 id="received-gift-title"><strong id="received-gift-sender"></strong>님이<br>식물을 선물했어요!</h2>
+    <div class="gift-ticket"><span id="received-gift-icon">🪴</span><div><small>받은 식물</small><b id="received-gift-plant">식물</b></div></div>
+    <blockquote id="received-gift-message"></blockquote>
+    <p class="received-gift-error" id="received-gift-error" role="alert"></p>
+    <button class="gift-done" id="received-gift-confirm" type="button">선물 확인하기</button>
+  </section>
+</div>
+<script src="../js/dashboard.js?v=17"></script>
 </body></html>

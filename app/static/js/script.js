@@ -79,7 +79,7 @@ loginForm.addEventListener('submit', async event => {
     const next = new URLSearchParams(location.search).get('next');
     const destination = next && next.startsWith('/') && !next.startsWith('//')
       ? next
-      : '/welcome.html';
+      : '/my-plants.html';
     window.setTimeout(() => { location.href = destination; }, 450);
   } catch (error) {
     showToast(error.message, true);
@@ -145,3 +145,4 @@ thumbnails.forEach(button => button.addEventListener('click', () => {
 }));
 
 loadCsrf().catch(error => showToast(error.message, true));
+

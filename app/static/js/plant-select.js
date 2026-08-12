@@ -87,3 +87,10 @@ continueButton.addEventListener('click', async () => {
 document.querySelector('.close').addEventListener('click', () => {
   location.href = 'welcome.html';
 });
+
+window.addEventListener('pageshow', () => {
+  document.body.classList.remove('page-leave');
+  continueButton.disabled = false;
+  continueButton.innerHTML = '이 식물 키우기 <span>→</span>';
+  filterCards();
+});

@@ -1,0 +1,9 @@
+/* Ivy: one upright central vine with star-shaped leaves alternating at its sides. */
+.seed-ivy.has-model .plant-trunk{left:112px;bottom:50px;width:8px;height:164px;border-radius:6px;background:linear-gradient(90deg,#2c6d3c,#62a050 55%,#286438);transform:none}
+.seed-ivy.has-model .plant-leaf{width:48px;height:48px;clip-path:polygon(50% 0,62% 34%,100% 28%,72% 55%,89% 91%,53% 72%,25% 100%,31% 62%,0 48%,39% 42%);border-radius:0;background:linear-gradient(145deg,var(--leaf-light),var(--leaf) 52%,var(--leaf-deep));box-shadow:none}
+.seed-ivy.has-model .plant-leaf:after{display:none!important}
+.seed-ivy .leaf-1{left:63px;top:121px;transform:rotate(-10deg)}.seed-ivy .leaf-2{left:120px;right:auto;top:105px;transform:rotate(10deg)}.seed-ivy .leaf-3{left:64px;top:78px;transform:rotate(-8deg)}.seed-ivy .leaf-4{left:121px;right:auto;top:61px;transform:rotate(8deg)}.seed-ivy .leaf-5{left:68px;top:35px;transform:rotate(-5deg)}.seed-ivy .leaf-6{left:117px;right:auto;top:20px;transform:rotate(5deg)}.seed-ivy .leaf-7{left:91px;top:-2px;transform:rotate(-2deg) scale(.9)}.seed-ivy .leaf-8{left:104px;right:auto;top:-3px;transform:rotate(8deg) scale(.82)}
+.seed-ivy.growth-sprout .plant-trunk{left:112px;height:83px}.seed-ivy.growth-sprout .leaf-1{left:67px;top:111px}.seed-ivy.growth-sprout .leaf-2{left:118px;top:105px}
+.seed-ivy.growth-bud .plant-bud,.seed-ivy.growth-mature .plant-bud,.seed-ivy.growth-mature .plant-bloom{display:none!important}.seed-ivy.growth-mature .plant-model:after{display:none!important}
+.seed-ivy.growth-mature .plant-leaf{width:53px;height:53px}.seed-ivy.growth-mature .leaf-1{left:57px}.seed-ivy.growth-mature .leaf-2{left:121px}.seed-ivy.growth-mature .leaf-3{left:58px}.seed-ivy.growth-mature .leaf-4{left:122px}.seed-ivy.growth-mature .leaf-5{left:62px}.seed-ivy.growth-mature .leaf-6{left:119px}
+.mini-seed.seed-ivy.has-model .plant-model{margin:-115px 0 0 -115px;transform:scale(.27)!important}

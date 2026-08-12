@@ -4,12 +4,47 @@ let csrf = '';
 let lastAiEmotion = null;
 
 const messages = document.querySelector('#messages');
+const messageList = document.querySelector('#message-list');
+const loadOlderMessages = document.querySelector('#load-older-messages');
 const stagePlant = document.querySelector('#seed');
 const seedActions = document.querySelector('#seed-actions');
 const chatForm = document.querySelector('#chat-form');
 const chatInput = document.querySelector('#chat-input');
 const actionButtons = document.querySelectorAll('[data-action]');
-const prefixPattern = /^(사랑을 담은|행운의|감사의|건강을 기원하는|싱그러운|우리의|존경의|사랑의)\s*/;
+const openGiftButton = document.querySelector('#open-gift');
+let nextBeforeMessageId = null;
+const seedStyles = {
+  '몬스테라': 'monstera', '스투키': 'stucky', '산세베리아': 'sansevieria',
+  '스킨답서스': 'pothos', '아레카야자': 'areca', '파키라': 'pachira',
+  '고무나무': 'rubber', '스파티필름': 'peace-lily', '아이비': 'ivy',
+  '필로덴드론': 'philodendron', '테이블야자': 'parlor-palm', '알로에': 'aloe',
+  '선인장': 'cactus', '페페로미아': 'peperomia', '행운목': 'lucky-bamboo',
+  '벤자민고무나무': 'ficus', '칼라데아': 'calathea', '드라세나': 'dracaena',
+  '호야': 'hoya', '아디안텀': 'maidenhair'
+};
+const stageStyles = { '씨앗': 'seed', '떡잎': 'sprout', '본잎': 'leaf', '봉오리': 'bud', '꽃': 'mature' };
+
+function plantModelMarkup() {
+  return '<span class="plant-model"><span class="plant-trunk"></span><span class="plant-pot"></span>'
+    + Array.from({ length: 8 }, (_, index) => `<i class="plant-leaf leaf-${index + 1}"></i>`).join('')
+    + '<i class="plant-bud"></i>'
+    + Array.from({ length: 5 }, (_, index) => `<i class="plant-bloom bloom-${index + 1}"></i>`).join('')
+    + '</span>';
+}
+
+function applyGrowthVisual(element, seedStyle, stageStyle, isNegative) {
+  const baseClass = element.id === 'mini-stage' ? 'mini-seed' : 'stage-plant';
+  element.className = baseClass;
+  element.classList.add('species-growth', `seed-${seedStyle}`, `growth-${stageStyle}`);
+  if (stageStyle === 'seed') {
+    element.classList.add('species-seed');
+    element.replaceChildren();
+  } else {
+    element.classList.add('has-model');
+    element.innerHTML = plantModelMarkup();
+  }
+  if (isNegative) element.classList.add('is-wilted');
+}
 
 const stages = [
   { min: 0, name: '씨앗', emoji: '🌰', next: 5, mood: '아직 싹을 틔우기 전입니다. 정성껏 돌봐주세요!' },
@@ -19,7 +54,7 @@ const stages = [
   { min: 70, name: '꽃', emoji: '🌸', next: 100, mood: '정성 덕분에 아름다운 꽃이 피었어요!' }
 ];
 const replies = {
-  water: '시원해요! 뿌리가 촉촉해졌어요. 💧',
+  water: '시원해요!\n뿌리가 축축해졌어요!',
   sun: '따뜻한 햇빛 덕분에 힘이 나요! ☀️',
   pet: '정성스러운 손길이 느껴져요. 🌱',
   ignore: '조금 외로워요. 저를 잊지 말아주세요. 🌧️'
@@ -27,10 +62,62 @@ const replies = {
 const apiActions = { water: 'WATER', sun: 'SUNLIGHT', pet: 'PET', ignore: 'IGNORE' };
 
 function escapeHtml(value) {
-  return value.replace(/[&<>"']/g, character => ({
+  return String(value).replace(/[&<>"']/g, character => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[character]));
 }
+
+function messageMarkup(role, content, speakerNickname = null) {
+  const isUser = role === 'USER';
+  const speaker = isUser && speakerNickname
+    ? `<small class="message-speaker">${escapeHtml(speakerNickname)}</small>`
+    : '';
+  return `<div class="message-row ${isUser ? 'user' : 'plant'}">${speaker}<p${isUser ? ' class="user"' : ''}>${escapeHtml(content)}</p></div>`;
+}
+
+function appendMessage(role, content, speakerNickname = null) {
+  messageList.insertAdjacentHTML('beforeend', messageMarkup(role, content, speakerNickname));
+}
+
+function appendNarration(content) {
+  const markup = escapeHtml(content).replace(/\n/g, '<br>');
+  messageList.insertAdjacentHTML('beforeend', `<p class="narration">${markup}</p>`);
+}
+
+async function loadChatHistory(beforeId = null) {
+  const query = new URLSearchParams({ limit: '50' });
+  if (beforeId) query.set('beforeId', String(beforeId));
+  const previousHeight = messages.scrollHeight;
+  const payload = await apiRequest(`/api/chat/${chosen.id}/messages?${query}`);
+  const historyMessages = payload.data.messages;
+  const markup = historyMessages.map(item => (
+    messageMarkup(item.role, item.content, item.speakerNickname)
+  )).join('');
+
+  if (beforeId) {
+    messageList.insertAdjacentHTML('afterbegin', markup);
+    messages.scrollTop += messages.scrollHeight - previousHeight;
+  } else if (historyMessages.length) {
+    messageList.innerHTML = markup;
+    messages.scrollTop = messages.scrollHeight;
+  } else {
+    messageList.innerHTML = '<p class="narration">씨앗이 심어졌습니다.<br>먼저 정성껏 돌봐주세요!</p>';
+  }
+  nextBeforeMessageId = payload.data.nextBeforeId;
+  loadOlderMessages.hidden = !nextBeforeMessageId;
+}
+
+loadOlderMessages.addEventListener('click', async () => {
+  if (!nextBeforeMessageId || loadOlderMessages.disabled) return;
+  loadOlderMessages.disabled = true;
+  try {
+    await loadChatHistory(nextBeforeMessageId);
+  } catch (error) {
+    appendMessage('PLANT', error.message);
+  } finally {
+    loadOlderMessages.disabled = false;
+  }
+});
 
 async function loadCsrf() {
   const response = await fetch('/api/v1/auth/csrf', { credentials: 'same-origin' });
@@ -62,11 +149,15 @@ function renderGrowth(animate = false) {
   if (!chosen) return;
   const total = chosen.growthScore;
   const stage = [...stages].reverse().find(item => total >= item.min);
-  const plantName = chosen.name.replace(prefixPattern, '');
+  const plantName = chosen.displayName || chosen.name;
+  const speciesName = chosen.speciesName || chosen.name;
   const isNegative = chosen.negativeEnergy > chosen.positiveEnergy;
-  const stageEmoji = isNegative ? '🥀' : stage.emoji;
+  const seedStyle = seedStyles[speciesName] || 'monstera';
+  const stageStyle = stageStyles[stage.name];
+  const visualKey = `${seedStyle}-${stageStyle}-${isNegative ? 'wilted' : 'healthy'}`;
 
   document.querySelector('#plant-name').textContent = plantName;
+  document.querySelector('#diary-link').href = `/diary.html?plantId=${chosen.id}`;
   document.querySelector('.plant-chip h2').textContent = plantName;
   document.querySelector('#positive').textContent = chosen.positiveEnergy;
   document.querySelector('#negative').textContent = chosen.negativeEnergy;
@@ -76,15 +167,22 @@ function renderGrowth(animate = false) {
   document.querySelector('#total-bar').style.width = `${total}%`;
   document.querySelector('#next').textContent = total >= 100 ? '완료' : Math.max(0, stage.next - total);
   document.querySelector('#stage-label').textContent = `${isNegative ? `흑화(${stage.name})` : stage.name} 단계`;
-  document.querySelector('#mini-stage').textContent = stageEmoji;
-  document.querySelector('#mood-copy').textContent = lastAiEmotion
-    ? `현재 기분: ${lastAiEmotion}`
+  const miniStage = document.querySelector('#mini-stage');
+  applyGrowthVisual(miniStage, seedStyle, stageStyle, isNegative);
+  const storedEmotion = ['POSITIVE', 'NEGATIVE'].includes(chosen.mood)
+    ? null
+    : chosen.mood;
+  const currentEmotion = lastAiEmotion || storedEmotion;
+  document.querySelector('#mood-copy').textContent = currentEmotion
+    ? `현재 기분: ${currentEmotion}`
     : (isNegative ? '관심이 조금 부족해요. 따뜻하게 돌봐주세요.' : stage.mood);
 
-  seedActions.hidden = total >= 5;
+  seedActions.hidden = false;
   chatForm.hidden = total < 5;
-  if (stagePlant.textContent !== stageEmoji) {
-    stagePlant.textContent = stageEmoji;
+  openGiftButton.hidden = total < 100;
+  if (stagePlant.dataset.visual !== visualKey) {
+    stagePlant.dataset.visual = visualKey;
+    applyGrowthVisual(stagePlant, seedStyle, stageStyle, isNegative);
     if (animate) {
       stagePlant.animate(
         [{ transform: 'scale(.5) rotate(-12deg)', opacity: .2 }, { transform: 'scale(1.2) rotate(5deg)', opacity: 1 }, { transform: 'scale(1)' }],
@@ -94,17 +192,17 @@ function renderGrowth(animate = false) {
   }
 }
 
-function showCompletion() {
-  if (chosen?.growthScore >= 100 && !completionShown) {
+function showCompletion(previousScore) {
+  if (previousScore < 100 && chosen?.growthScore >= 100 && !completionShown) {
     completionShown = true;
     window.setTimeout(() => {
-      document.querySelector('#growth-modal').hidden = false;
-      document.body.style.overflow = 'hidden';
+      openGiftModal();
     }, 500);
   }
 }
 
 async function care(actionType, note = null, sentiment = 'POSITIVE') {
+  const previousScore = chosen.growthScore;
   const payload = await apiRequest(`/api/v1/plants/${chosen.id}/care`, {
     method: 'POST',
     body: JSON.stringify({ actionType, note, sentiment })
@@ -112,7 +210,7 @@ async function care(actionType, note = null, sentiment = 'POSITIVE') {
   chosen = payload.data.plant;
   lastAiEmotion = null;
   renderGrowth(true);
-  showCompletion();
+  showCompletion(previousScore);
 }
 
 actionButtons.forEach(button => button.addEventListener('click', async () => {
@@ -121,14 +219,14 @@ actionButtons.forEach(button => button.addEventListener('click', async () => {
   const action = button.dataset.action;
   try {
     await care(apiActions[action]);
-    messages.insertAdjacentHTML('beforeend', `<p class="user">${replies[action]}</p>`);
+    appendNarration(replies[action]);
     messages.scrollTop = messages.scrollHeight;
     stagePlant.animate(
       [{ transform: 'scale(.94)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }],
       { duration: 320 }
     );
   } catch (error) {
-    messages.insertAdjacentHTML('beforeend', `<p>${escapeHtml(error.message)}</p>`);
+    appendMessage('PLANT', error.message);
   } finally {
     actionButtons.forEach(item => { item.disabled = false; });
   }
@@ -137,9 +235,9 @@ actionButtons.forEach(button => button.addEventListener('click', async () => {
 chatForm.addEventListener('submit', async event => {
   event.preventDefault();
   const text = chatInput.value.trim();
-  if (!text || !chosen || chatInput.disabled || chosen.growthScore >= 100) return;
+  if (!text || !chosen || chatInput.disabled) return;
 
-  messages.insertAdjacentHTML('beforeend', `<p class="user">${escapeHtml(text)}</p>`);
+  appendMessage('USER', text);
   chatInput.value = '';
   chatInput.disabled = true;
   messages.scrollTop = messages.scrollHeight;
@@ -151,11 +249,10 @@ chatForm.addEventListener('submit', async event => {
     });
     chosen = payload.plant;
     lastAiEmotion = payload.emotion || null;
-    messages.insertAdjacentHTML('beforeend', `<p>${escapeHtml(payload.response)}</p>`);
+    appendMessage('PLANT', payload.response);
     renderGrowth(true);
-    showCompletion();
   } catch (error) {
-    messages.insertAdjacentHTML('beforeend', `<p>${escapeHtml(error.message)}</p>`);
+    appendMessage('PLANT', error.message);
   } finally {
     chatInput.disabled = false;
     chatInput.focus();
@@ -175,12 +272,16 @@ async function loadPlant() {
         location.href = 'plant-select.html';
         return;
       }
-      chosen = payload.data.plants[0];
-      history.replaceState({}, '', `dashboard-v2.html?plantId=${chosen.id}`);
+      const firstPlant = payload.data.plants[0];
+      const detailPayload = await apiRequest(`/api/v1/plants/${firstPlant.id}`);
+      chosen = detailPayload.data.plant;
+      history.replaceState({}, '', `dashboard-v2.html?plantId=${firstPlant.id}`);
     }
     renderGrowth(false);
+    await loadChatHistory();
+    if (chosen.receivedGift) showReceivedGift(chosen.receivedGift);
   } catch (error) {
-    messages.innerHTML = `<p>${escapeHtml(error.message)}</p>`;
+    messageList.innerHTML = `<p>${escapeHtml(error.message)}</p>`;
   }
 }
 
@@ -192,7 +293,7 @@ profileToggle.addEventListener('click', () => {
   profileToggle.setAttribute('aria-expanded', String(willOpen));
 });
 document.addEventListener('click', event => {
-  if (!profileCard.hidden && !profileCard.contains(event.target) && event.target !== profileToggle) {
+  if (!profileCard.hidden && !profileCard.contains(event.target) && !profileToggle.contains(event.target)) {
     profileCard.hidden = true;
     profileToggle.setAttribute('aria-expanded', 'false');
   }
@@ -202,19 +303,108 @@ document.querySelector('#profile-logout').addEventListener('click', async () => 
     await apiRequest('/api/v1/auth/logout', { method: 'POST' });
     location.href = '/login.html';
   } catch (error) {
-    messages.insertAdjacentHTML('beforeend', `<p>${escapeHtml(error.message)}</p>`);
+    appendMessage('PLANT', error.message);
   }
 });
 
 const growthModal = document.querySelector('#growth-modal');
+function openGiftModal() {
+  document.querySelector('#gift-form-view').hidden = false;
+  document.querySelector('#gift-success').hidden = true;
+  giftError.textContent = '';
+  growthModal.hidden = false;
+  document.body.style.overflow = 'hidden';
+}
 function closeGrowthModal() {
   growthModal.hidden = true;
   document.body.style.overflow = '';
 }
+openGiftButton.addEventListener('click', openGiftModal);
 document.querySelector('.modal-later').addEventListener('click', closeGrowthModal);
-document.querySelector('.growth-modal-backdrop').addEventListener('click', closeGrowthModal);
+growthModal.querySelector('.growth-modal-backdrop').addEventListener('click', closeGrowthModal);
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && !growthModal.hidden) closeGrowthModal();
+});
+
+const giftForm = document.querySelector('#gift-form');
+const giftNickname = document.querySelector('#gift-nickname');
+const giftMessage = document.querySelector('#gift-message');
+const giftMessageCount = document.querySelector('#gift-message-count');
+const giftError = document.querySelector('#gift-error');
+giftMessage.addEventListener('input', () => {
+  giftMessageCount.textContent = giftMessage.value.length;
+});
+giftNickname.addEventListener('input', () => {
+  giftError.textContent = '';
+});
+giftForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  const nickname = giftNickname.value.trim();
+  const message = giftMessage.value.trim();
+  if (nickname.length < 2) {
+    giftError.textContent = '닉네임을 2자 이상 입력해주세요.';
+    giftNickname.focus();
+    return;
+  }
+  if (!window.confirm(`${nickname}님에게 이 식물을 선물할까요? 선물하면 소유권이 즉시 이전됩니다.`)) {
+    return;
+  }
+  const submitButton = giftForm.querySelector('.gift-submit');
+  submitButton.disabled = true;
+  submitButton.querySelector('b').textContent = '선물 카드를 만드는 중…';
+  try {
+    const payload = await apiRequest(`/api/v1/plants/${chosen.id}/gift`, {
+      method: 'POST',
+      body: JSON.stringify({ recipientNickname: nickname, message })
+    });
+    document.querySelector('#gift-recipient').textContent = payload.data.gift.recipient.nickname;
+    document.querySelector('#gift-plant-name').textContent = chosen?.displayName || chosen?.name || '식물';
+    document.querySelector('#gift-plant-icon').textContent = chosen?.emoji || '🪴';
+    document.querySelector('#gift-sent-message').textContent = message;
+    document.querySelector('#gift-form-view').hidden = true;
+    document.querySelector('#gift-success').hidden = false;
+  } catch (error) {
+    giftError.textContent = error.message;
+    submitButton.disabled = false;
+    submitButton.querySelector('b').textContent = '이 식물 선물하기';
+  }
+});
+document.querySelector('#gift-success .gift-done').addEventListener('click', () => {
+  location.href = '/my-plants.html';
+});
+
+const receivedGiftModal = document.querySelector('#received-gift-modal');
+const receivedGiftConfirm = document.querySelector('#received-gift-confirm');
+let receivedGift = null;
+
+function showReceivedGift(gift) {
+  receivedGift = gift;
+  document.querySelector('#received-gift-sender').textContent = gift.sender?.nickname || '친구';
+  document.querySelector('#received-gift-plant').textContent = chosen?.displayName || chosen?.name || '식물';
+  document.querySelector('#received-gift-icon').textContent = chosen?.emoji || '🪴';
+  document.querySelector('#received-gift-message').textContent = gift.message || '';
+  document.querySelector('#received-gift-error').textContent = '';
+  receivedGiftModal.hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+
+receivedGiftConfirm.addEventListener('click', async () => {
+  if (!receivedGift || receivedGiftConfirm.disabled) return;
+  receivedGiftConfirm.disabled = true;
+  receivedGiftConfirm.textContent = '확인하는 중…';
+  try {
+    await apiRequest(`/api/v1/gifts/${receivedGift.id}/acknowledge`, { method: 'POST' });
+    chosen.receivedGift = null;
+    receivedGift = null;
+    receivedGiftModal.hidden = true;
+    document.querySelector('#profile-gift-indicator').hidden = true;
+    document.body.style.overflow = '';
+  } catch (error) {
+    document.querySelector('#received-gift-error').textContent = error.message;
+  } finally {
+    receivedGiftConfirm.disabled = false;
+    receivedGiftConfirm.textContent = '선물 확인하기';
+  }
 });
 
 loadPlant();

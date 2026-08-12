@@ -3,12 +3,17 @@ from flask_login import current_user, login_required
 from sqlalchemy.exc import IntegrityError
 
 from ..extensions import db
-from ..models import CareLog, Plant, PlantOwnership, PlantSpecies
+from ..models import CareLog, Gift, Plant, PlantOwnership, PlantSpecies
+from ..services.epithet_service import (
+    assign_plant_epithet,
+    energy_polarity,
+    refresh_epithet_after_state_change,
+)
 
 
 plants_bp = Blueprint("plants", __name__, url_prefix="/api/v1/plants")
 
-ACTION_TYPES = {"WATER", "SUNLIGHT", "PET", "PRAISE", "IGNORE"}
+ACTION_TYPES = {"WATER", "SUNLIGHT", "PET", "IGNORE"}
 
 
 def api_error(code: str, message: str, status: int, fields: dict | None = None):
@@ -113,9 +118,10 @@ def create_plant():
         growth_score=0,
         positive_energy=0,
         negative_energy=0,
-        mood="POSITIVE",
+        mood=None,
         status="GROWING",
     )
+    assign_plant_epithet(plant)
     db.session.add(plant)
     db.session.flush()
     ownership = PlantOwnership(
@@ -140,7 +146,18 @@ def get_plant(plant_id: int):
     if not row:
         return api_error("PLANT_NOT_FOUND", "식물을 찾을 수 없습니다.", 404)
     plant, ownership = row
-    return jsonify(data={"plant": plant.to_dict(ownership)})
+    plant_data = plant.to_dict(ownership)
+    received_gift = None
+    if ownership.gift_id:
+        gift = db.session.get(Gift, ownership.gift_id)
+        if (
+            gift
+            and gift.recipient_user_id == current_user.id
+            and gift.recipient_viewed_at is None
+        ):
+            received_gift = gift.to_dict()
+    plant_data["receivedGift"] = received_gift
+    return jsonify(data={"plant": plant_data})
 
 
 @plants_bp.post("/<int:plant_id>/care")
@@ -151,12 +168,9 @@ def care_for_plant(plant_id: int):
         return error
 
     action_type = str(body.get("actionType", "")).strip().upper()
-    sentiment = str(body.get("sentiment", "POSITIVE")).strip().upper()
     note = str(body.get("note", "")).strip() or None
     if action_type not in ACTION_TYPES:
         return api_error("INVALID_ACTION", "지원하지 않는 돌봄 동작입니다.", 400)
-    if sentiment not in {"POSITIVE", "NEGATIVE"}:
-        return api_error("INVALID_SENTIMENT", "감정 분류를 확인해 주세요.", 400)
     if note and len(note) > 1000:
         return api_error("NOTE_TOO_LONG", "기록은 1000자 이하로 입력해 주세요.", 400)
 
@@ -164,21 +178,25 @@ def care_for_plant(plant_id: int):
     if not row:
         return api_error("PLANT_NOT_FOUND", "식물을 찾을 수 없습니다.", 404)
     plant, ownership = row
-    if plant.growth_score >= 100:
-        return api_error("PLANT_ALREADY_COMPLETE", "이미 성장을 완료한 식물입니다.", 409)
-
     previous_score = plant.growth_score
-    is_negative = action_type == "IGNORE" or sentiment == "NEGATIVE"
+    previous_stage = plant.growth_stage
+    previous_polarity = energy_polarity(
+        plant.positive_energy,
+        plant.negative_energy,
+    )
+    is_negative = action_type == "IGNORE"
     positive_delta = 0 if is_negative else 5
     negative_delta = 5 if is_negative else 0
+    plant.growth_score = min(100, plant.growth_score + 5)
     plant.positive_energy += positive_delta
     plant.negative_energy += negative_delta
-    plant.growth_score = min(100, plant.positive_energy + plant.negative_energy)
-    plant.mood = (
-        "POSITIVE" if plant.positive_energy >= plant.negative_energy else "NEGATIVE"
-    )
-    if plant.growth_score >= 100:
+    if previous_score < 100 and plant.growth_score >= 100:
         plant.status = "GIFT_READY"
+    refresh_epithet_after_state_change(
+        plant,
+        previous_stage=previous_stage,
+        previous_polarity=previous_polarity,
+    )
 
     db.session.add(
         CareLog(

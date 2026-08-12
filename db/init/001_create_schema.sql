@@ -34,9 +34,77 @@ CREATE TABLE plant_species (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE plant_epithet_fragments (
+    id BIGSERIAL PRIMARY KEY,
+    slot VARCHAR(10) NOT NULL,
+    polarity VARCHAR(10) NOT NULL,
+    text VARCHAR(40) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT chk_plant_epithet_fragments_slot
+        CHECK (slot IN ('FIRST', 'SECOND')),
+    CONSTRAINT chk_plant_epithet_fragments_polarity
+        CHECK (polarity IN ('POSITIVE', 'NEGATIVE')),
+    CONSTRAINT uq_plant_epithet_fragment
+        UNIQUE (slot, polarity, text)
+);
+
+INSERT INTO plant_epithet_fragments (slot, polarity, text) VALUES
+    ('FIRST', 'POSITIVE', '찬란한'),
+    ('FIRST', 'POSITIVE', '축복받은'),
+    ('FIRST', 'POSITIVE', '싱그러운'),
+    ('FIRST', 'POSITIVE', '다정한'),
+    ('FIRST', 'POSITIVE', '눈부신'),
+    ('FIRST', 'POSITIVE', '용감한'),
+    ('FIRST', 'POSITIVE', '포근한'),
+    ('FIRST', 'POSITIVE', '꿈꾸는'),
+    ('FIRST', 'POSITIVE', '생명력 넘치는'),
+    ('FIRST', 'POSITIVE', '햇살을 머금은'),
+    ('FIRST', 'POSITIVE', '별빛에 물든'),
+    ('FIRST', 'POSITIVE', '기적을 품은'),
+    ('SECOND', 'POSITIVE', '새벽의'),
+    ('SECOND', 'POSITIVE', '햇살의'),
+    ('SECOND', 'POSITIVE', '별빛의'),
+    ('SECOND', 'POSITIVE', '봄바람의'),
+    ('SECOND', 'POSITIVE', '푸른 숲의'),
+    ('SECOND', 'POSITIVE', '생명의'),
+    ('SECOND', 'POSITIVE', '행운의'),
+    ('SECOND', 'POSITIVE', '희망의'),
+    ('SECOND', 'POSITIVE', '달빛의'),
+    ('SECOND', 'POSITIVE', '이슬의'),
+    ('SECOND', 'POSITIVE', '정원의'),
+    ('SECOND', 'POSITIVE', '무지개의'),
+    ('FIRST', 'NEGATIVE', '뒤틀린'),
+    ('FIRST', 'NEGATIVE', '저주받은'),
+    ('FIRST', 'NEGATIVE', '타락한'),
+    ('FIRST', 'NEGATIVE', '메마른'),
+    ('FIRST', 'NEGATIVE', '잠식된'),
+    ('FIRST', 'NEGATIVE', '폭주하는'),
+    ('FIRST', 'NEGATIVE', '음산한'),
+    ('FIRST', 'NEGATIVE', '잊혀진'),
+    ('FIRST', 'NEGATIVE', '분노한'),
+    ('FIRST', 'NEGATIVE', '광기에 젖은'),
+    ('FIRST', 'NEGATIVE', '그림자에 물든'),
+    ('FIRST', 'NEGATIVE', '종말을 부르는'),
+    ('SECOND', 'NEGATIVE', '황천의'),
+    ('SECOND', 'NEGATIVE', '심연의'),
+    ('SECOND', 'NEGATIVE', '공허의'),
+    ('SECOND', 'NEGATIVE', '망각의'),
+    ('SECOND', 'NEGATIVE', '광기의'),
+    ('SECOND', 'NEGATIVE', '파멸의'),
+    ('SECOND', 'NEGATIVE', '어둠의'),
+    ('SECOND', 'NEGATIVE', '폐허의'),
+    ('SECOND', 'NEGATIVE', '독안개의'),
+    ('SECOND', 'NEGATIVE', '붉은 달의'),
+    ('SECOND', 'NEGATIVE', '균열의'),
+    ('SECOND', 'NEGATIVE', '잿빛 밤의');
+
 CREATE TABLE plants (
     id BIGSERIAL PRIMARY KEY,
     species_id BIGINT NOT NULL REFERENCES plant_species(id) ON DELETE RESTRICT,
+    epithet_first_id BIGINT NOT NULL REFERENCES plant_epithet_fragments(id) ON DELETE RESTRICT,
+    epithet_second_id BIGINT NOT NULL REFERENCES plant_epithet_fragments(id) ON DELETE RESTRICT,
     name VARCHAR(50) NOT NULL,
     growth_score SMALLINT NOT NULL DEFAULT 0,
     positive_energy INTEGER NOT NULL DEFAULT 0,
@@ -66,8 +134,8 @@ CREATE TABLE gifts (
     gifted_on DATE NOT NULL,
     message_card TEXT,
     status VARCHAR(20) NOT NULL DEFAULT 'READY',
-    claim_code_hash VARCHAR(255),
     accepted_at TIMESTAMPTZ,
+    recipient_viewed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -114,7 +182,7 @@ CREATE TABLE care_logs (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT chk_care_logs_action_type
-        CHECK (action_type IN ('PRAISE', 'PET', 'WATER', 'SUNLIGHT', 'IGNORE'))
+        CHECK (action_type IN ('PET', 'WATER', 'SUNLIGHT', 'IGNORE'))
 );
 
 CREATE TABLE chat_sessions (
@@ -154,7 +222,8 @@ CREATE TABLE diary_entries (
     negative_energy_snapshot INTEGER NOT NULL,
     growth_stage_snapshot VARCHAR(20) NOT NULL,
     growth_tendency_snapshot VARCHAR(20) NOT NULL,
-    is_public BOOLEAN NOT NULL DEFAULT FALSE,
+    diary_date DATE NOT NULL,
+    activity_summary JSONB NOT NULL DEFAULT '{}'::jsonb,
     diary_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -170,28 +239,13 @@ CREATE TABLE diary_entries (
     CONSTRAINT chk_diary_growth_stage
         CHECK (growth_stage_snapshot IN ('SEED', 'COTYLEDON', 'TRUE_LEAF', 'BUD', 'FLOWER')),
     CONSTRAINT chk_diary_growth_tendency
-        CHECK (growth_tendency_snapshot IN ('POSITIVE', 'NEGATIVE'))
-);
-
-CREATE TABLE diary_media (
-    id BIGSERIAL PRIMARY KEY,
-    diary_entry_id BIGINT NOT NULL REFERENCES diary_entries(id) ON DELETE CASCADE,
-    media_type VARCHAR(20) NOT NULL,
-    media_url TEXT NOT NULL,
-    sort_order INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT chk_diary_media_type
-        CHECK (media_type IN ('IMAGE', 'VIDEO')),
-    CONSTRAINT chk_diary_media_sort_order
-        CHECK (sort_order >= 0),
-    CONSTRAINT uq_diary_media_sort_order
-        UNIQUE (diary_entry_id, sort_order)
+        CHECK (growth_tendency_snapshot IN ('POSITIVE', 'NEGATIVE')),
+    CONSTRAINT uq_diary_plant_date
+        UNIQUE (plant_id, diary_date)
 );
 
 CREATE TABLE public_guestbook_entries (
     id BIGSERIAL PRIMARY KEY,
-    plant_id BIGINT NOT NULL REFERENCES plants(id) ON DELETE RESTRICT,
     author_user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
     nickname_snapshot VARCHAR(50) NOT NULL,
     content VARCHAR(500) NOT NULL,
@@ -202,6 +256,42 @@ CREATE TABLE public_guestbook_entries (
         CHECK (length(btrim(content)) > 0)
 );
 
+CREATE TABLE guestbook_replies (
+    id BIGSERIAL PRIMARY KEY,
+    entry_id BIGINT NOT NULL REFERENCES public_guestbook_entries(id) ON DELETE CASCADE,
+    author_user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    nickname_snapshot VARCHAR(50) NOT NULL,
+    content VARCHAR(500) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT chk_guestbook_replies_content
+        CHECK (length(btrim(content)) > 0)
+);
+
+CREATE TABLE guestbook_reactions (
+    id BIGSERIAL PRIMARY KEY,
+    entry_id BIGINT NOT NULL REFERENCES public_guestbook_entries(id) ON DELETE CASCADE,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    reaction_type VARCHAR(10) NOT NULL,
+
+    CONSTRAINT chk_guestbook_reactions_type
+        CHECK (reaction_type IN ('like', 'dislike')),
+    CONSTRAINT uq_guestbook_entry_reaction_user
+        UNIQUE (entry_id, user_id)
+);
+
+CREATE TABLE guestbook_reply_reactions (
+    id BIGSERIAL PRIMARY KEY,
+    reply_id BIGINT NOT NULL REFERENCES guestbook_replies(id) ON DELETE CASCADE,
+    user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    reaction_type VARCHAR(10) NOT NULL,
+
+    CONSTRAINT chk_guestbook_reply_reactions_type
+        CHECK (reaction_type IN ('like', 'dislike')),
+    CONSTRAINT uq_guestbook_reply_reaction_user
+        UNIQUE (reply_id, user_id)
+);
+
 CREATE UNIQUE INDEX uq_active_plant_owner
     ON plant_ownerships (plant_id)
     WHERE ended_at IS NULL;
@@ -210,12 +300,11 @@ CREATE UNIQUE INDEX uq_ownership_gift
     ON plant_ownerships (gift_id)
     WHERE gift_id IS NOT NULL;
 
-CREATE UNIQUE INDEX uq_gifts_claim_code_hash
-    ON gifts (claim_code_hash)
-    WHERE claim_code_hash IS NOT NULL;
-
 CREATE INDEX idx_plants_species
     ON plants (species_id);
+
+CREATE INDEX idx_plant_epithet_fragments_pool
+    ON plant_epithet_fragments (polarity, slot, is_active);
 
 CREATE INDEX idx_ownerships_owner_active
     ON plant_ownerships (owner_user_id, ended_at);
@@ -232,12 +321,17 @@ CREATE INDEX idx_chat_messages_session
 CREATE INDEX idx_diary_entries_plant_date
     ON diary_entries (plant_id, diary_at DESC);
 
-CREATE INDEX idx_public_diary
-    ON diary_entries (diary_at DESC)
-    WHERE is_public = TRUE;
+CREATE INDEX idx_guestbook_created
+    ON public_guestbook_entries (created_at DESC);
 
-CREATE INDEX idx_guestbook_plant_created
-    ON public_guestbook_entries (plant_id, created_at DESC);
+CREATE INDEX idx_guestbook_replies_entry_created
+    ON guestbook_replies (entry_id, created_at);
+
+CREATE INDEX idx_guestbook_reactions_entry
+    ON guestbook_reactions (entry_id);
+
+CREATE INDEX idx_guestbook_reply_reactions_reply
+    ON guestbook_reply_reactions (reply_id);
 
 CREATE INDEX idx_gifts_recipient
     ON gifts (recipient_user_id, gifted_on DESC);

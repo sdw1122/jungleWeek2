@@ -1,0 +1,11 @@
+/* Calathea: the mature display is defined by its pink-centred ornamental foliage. */
+.seed-calathea.has-model{--petiole:#536f49;--leaf:#55794d;--leaf-deep:#244e35;--leaf-light:#94a86d}
+.seed-calathea.has-model .plant-leaf{border:1px solid rgba(28,65,40,.16);box-shadow:inset -4px -3px 7px rgba(26,57,37,.2)}
+/* Pink begins to wash into the leaf centres at the bud stage. */
+.seed-calathea.growth-bud .plant-leaf{background:linear-gradient(90deg,#315e3c 0 13%,#789061 14% 23%,#c78ca4 34% 66%,#789061 77% 86%,#315e3c 87%);box-shadow:inset 0 0 0 5px rgba(37,82,49,.7),inset -4px -3px 7px rgba(48,42,47,.15)}
+.seed-calathea.growth-bud .plant-bud{background:linear-gradient(145deg,#f4d5df,#d99ab2 67%,#aa607e);box-shadow:0 4px 8px rgba(104,53,76,.16)}
+/* Full colour: dark green margins around a broad raspberry-pink centre, like the reference plant. */
+.seed-calathea.growth-mature .plant-leaf{background:linear-gradient(90deg,#214c32 0 12%,#557442 13% 20%,#bd668b 29%,#d98fab 48%,#ad5279 70%,#557442 80% 87%,#214c32 88%);box-shadow:inset 0 0 0 6px rgba(29,72,42,.78),inset -5px -4px 8px rgba(65,30,51,.2);filter:saturate(1.08)}
+.seed-calathea.growth-mature .plant-bloom{display:none!important}
+.seed-calathea.growth-mature .plant-model:after{display:none!important}
+.mini-seed.seed-calathea.has-model .plant-model{margin:-115px 0 0 -115px;transform:scale(.27)!important}

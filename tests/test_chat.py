@@ -3,7 +3,16 @@ from unittest.mock import patch
 
 from app import create_app
 from app.extensions import db
-from app.models import ChatMessage, ChatSession, Plant, PlantOwnership, PlantSpecies, User
+from app.models import (
+    CareLog,
+    ChatMessage,
+    ChatSession,
+    Plant,
+    PlantOwnership,
+    PlantSpecies,
+    User,
+)
+from app.services.epithet_service import assign_plant_epithet
 
 
 class ChatApiTestCase(unittest.TestCase):
@@ -27,6 +36,7 @@ class ChatApiTestCase(unittest.TestCase):
             db.session.add(species)
             db.session.flush()
             plant = Plant(species_id=species.id, name="몬스테라", mood="POSITIVE")
+            assign_plant_epithet(plant)
             db.session.add(plant)
             db.session.flush()
             db.session.add(
@@ -83,19 +93,42 @@ class ChatApiTestCase(unittest.TestCase):
             "sentiment": "POSITIVE",
             "response": "고마워요! 🌱",
             "emotion": "기쁨",
-            "positive_delta": 1,
+            "positive_delta": 4,
             "negative_delta": 0,
         },
     )
     def test_chat_saves_messages_and_updates_owned_plant(self, analyze_chat):
+        with self.app.app_context():
+            db.session.add(
+                CareLog(
+                    plant_id=self.plant_id,
+                    user_id=self.user_id,
+                    action_type="IGNORE",
+                    growth_delta=5,
+                    negative_delta=5,
+                )
+            )
+            db.session.commit()
+
         response = self._chat()
 
         self.assertEqual(response.status_code, 200)
         payload = response.get_json()
         self.assertEqual(payload["response"], "고마워요! 🌱")
-        self.assertEqual(payload["plant"]["growthScore"], 1)
-        self.assertEqual(payload["plant"]["positiveEnergy"], 1)
-        analyze_chat.assert_called_once()
+        self.assertEqual(payload["positiveDelta"], 4)
+        self.assertEqual(payload["negativeDelta"], 0)
+        self.assertEqual(payload["plant"]["growthScore"], 0)
+        self.assertEqual(payload["plant"]["positiveEnergy"], 4)
+        self.assertEqual(payload["plant"]["mood"], "기쁨")
+        analyze_chat.assert_called_once_with(
+            "예쁘게 자라줘",
+            [],
+            0,
+            0,
+            0,
+            "IGNORE",
+            payload["plant"]["displayName"],
+        )
 
         with self.app.app_context():
             self.assertEqual(ChatSession.query.count(), 1)
@@ -104,7 +137,9 @@ class ChatApiTestCase(unittest.TestCase):
                 [item.role for item in ChatMessage.query.order_by(ChatMessage.id)],
                 ["USER", "PLANT"],
             )
-            self.assertEqual(db.session.get(Plant, self.plant_id).growth_score, 1)
+            plant = db.session.get(Plant, self.plant_id)
+            self.assertEqual(plant.growth_score, 0)
+            self.assertEqual(plant.mood, "기쁨")
 
     def test_other_user_cannot_chat_with_plant(self):
         with self.app.app_context():
@@ -116,6 +151,26 @@ class ChatApiTestCase(unittest.TestCase):
 
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.get_json()["error"]["code"], "PLANT_NOT_FOUND")
+
+    @patch(
+        "app.routes.chat.analyze_chat",
+        return_value={
+            "sentiment": "NEGATIVE",
+            "response": "흥, 이제야 말을 거는 거야?",
+            "emotion": "짜증",
+            "positive_delta": 0,
+            "negative_delta": 5,
+        },
+    )
+    def test_chat_polarity_flip_refreshes_epithet(self, analyze_chat):
+        response = self._chat(message="못생겼어")
+
+        self.assertEqual(response.status_code, 200)
+        plant = response.get_json()["plant"]
+        self.assertEqual(plant["growthStage"], "SEED")
+        self.assertEqual(plant["epithet"]["polarity"], "NEGATIVE")
+        self.assertEqual(plant["negativeEnergy"], 5)
+        analyze_chat.assert_called_once()
 
     def test_chat_requires_login_csrf_and_valid_message(self):
         anonymous = self.app.test_client()

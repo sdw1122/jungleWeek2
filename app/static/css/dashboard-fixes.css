@@ -17,6 +17,36 @@ html, body {
   scrollbar-color: #cfd6dc transparent;
 }
 
+/* Scene narration sits on the chat axis instead of belonging to either speaker. */
+.messages p.narration {
+  position: relative;
+  width: fit-content;
+  max-width: 88%;
+  margin: 20px auto 28px;
+  padding: 11px 24px;
+  border: 1px solid #dfe4e7;
+  border-radius: 999px;
+  background: #eef0f2;
+  color: #687587;
+  box-shadow: 0 5px 16px rgba(45, 55, 65, .05);
+  font-size: 13px;
+  line-height: 1.65;
+  text-align: center;
+}
+
+.messages p.narration::before,
+.messages p.narration::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 24px;
+  height: 1px;
+  background: #d4dade;
+}
+
+.messages p.narration::before { right: calc(100% + 10px); }
+.messages p.narration::after { left: calc(100% + 10px); }
+
 .actions {
   position: relative;
   z-index: 2;

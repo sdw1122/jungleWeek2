@@ -9,8 +9,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/back-nav.css">
   <link rel="stylesheet" href="../css/my-plants.css?v=1">
+  <link rel="stylesheet" href="../css/my-plants-gifts.css?v=1">
 </head>
 <body>
+  {% include "_global_nav.html" %}
   <a class="back-to-dashboard" href="dashboard-v2.html">← 식물 키우기로 돌아가기</a>
   <main class="plants-dashboard">
     <section class="plants-intro">
@@ -29,6 +31,6 @@
     <section class="plant-list" id="my-plant-list" aria-live="polite"></section>
     <section class="empty-plants" id="empty-plants" hidden><span>🌰</span><h2>아직 키우는 식물이 없어요</h2><p>마음을 담아 키울 첫 식물을 골라보세요.</p><a href="plant-select.html">첫 식물 고르기</a></section>
   </main>
-  <script src="../js/my-plants.js?v=2"></script>
+  <script src="../js/my-plants.js?v=3"></script>
 </body>
 </html>

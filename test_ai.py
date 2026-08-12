@@ -8,7 +8,8 @@ sys.path.insert(0, os.path.abspath('.'))
 from dotenv import load_dotenv
 load_dotenv()
 
-print('API KEY:', bool(os.getenv('GEMINI_API_KEY')))
+print('OPENAI API KEY:', bool(os.getenv('OPENAI_API_KEY')))
+print('MODEL:', os.getenv('OPENAI_MODEL', 'gpt-5.6-luna'))
 
 start = time.time()
 try:
