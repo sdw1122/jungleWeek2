@@ -16,7 +16,7 @@ function loadEntries() {
       author: '몬스테라집사',
       content: '식물 덕분에 아침마다 웃게 돼요. 다들 오늘도 좋은 하루 보내세요 🌱',
       createdAt: Date.now() - 1000 * 60 * 40,
-      reactions: { sprout: 0, water: 0, sun: 0, heart: 0 },
+      reactions: { like: 0, dislike: 0 },
       replies: []
     },
     {
@@ -24,7 +24,7 @@ function loadEntries() {
       author: '다육이엄마',
       content: 'Farmda에서 만난 인연 덕분에 식물 키우는 재미가 두 배가 됐어요. 감사합니다!',
       createdAt: Date.now() - 1000 * 60 * 60 * 5,
-      reactions: { sprout: 0, water: 0, sun: 0, heart: 0 },
+      reactions: { like: 0, dislike: 0 },
       replies: []
     },
     {
@@ -32,7 +32,7 @@ function loadEntries() {
       author: '초록정원사',
       content: '처음 시작할 땐 막막했는데 다들 응원해주셔서 여기까지 왔네요. 고맙습니다 :)',
       createdAt: Date.now() - 1000 * 60 * 60 * 27,
-      reactions: { sprout: 0, water: 0, sun: 0, heart: 0 },
+      reactions: { like: 0, dislike: 0 },
       replies: []
     },
   ];
@@ -74,37 +74,39 @@ function render() {
   entryList.innerHTML = entries
     .map(
       (entry) => {
-        // Fallback for older entries without reactions/replies
-        const rx = entry.reactions || { sprout: 0, water: 0, sun: 0, heart: 0 };
+        const rx = entry.reactions || { like: 0, dislike: 0 };
         const rp = entry.replies || [];
         
         const repliesHtml = rp.map(r => `
-          <div style="background:#f8f9fa; padding:10px; margin-top:10px; border-radius:8px; border-left:3px solid #12a84e;">
-            <b style="color:#12a84e; margin-right:8px;">👑 ${escapeHtml(r.author)}</b>
+          <div style="background:#f8f9fa; padding:12px; margin-top:10px; border-radius:8px; border-left:3px solid #dfe3e8; font-size:14px; color:#333;">
+            <b style="color:#555; margin-right:8px;">${escapeHtml(r.author)}</b>
             <span>${escapeHtml(r.content)}</span>
           </div>
         `).join('');
 
-        return `<article class="entry-card" data-id="${escapeHtml(entry.id)}">
-        <div class="entry-card-meta">
-          <span class="entry-author">${escapeHtml(entry.author)}</span>
-          <span>${timeAgo(entry.createdAt)}</span>
+        return `<article class="entry-card" data-id="${escapeHtml(entry.id)}" style="padding:20px; border-radius:12px; border:1px solid #eee; margin-bottom:15px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+        <div class="entry-card-meta" style="display:flex; align-items:center; margin-bottom:10px;">
+          <strong class="entry-author" style="font-size:15px; color:#222; margin-right:10px;">${escapeHtml(entry.author)}</strong>
+          <span style="font-size:13px; color:#999;">${timeAgo(entry.createdAt)}</span>
           ${entry.author === CURRENT_USER ? `
-            <button class="entry-edit" type="button" aria-label="수정" style="border:none;background:none;color:#888;cursor:pointer;font-size:12px;margin-left:auto;">수정</button>
-            <button class="entry-delete" type="button" aria-label="삭제" style="border:none;background:none;color:#c01461;cursor:pointer;font-size:12px;margin-left:5px;">삭제</button>
+            <div style="margin-left:auto; display:flex; gap:10px;">
+              <button class="entry-edit" type="button" aria-label="수정" style="border:none;background:none;color:#888;cursor:pointer;font-size:13px;">수정</button>
+              <button class="entry-delete" type="button" aria-label="삭제" style="border:none;background:none;color:#ff6b6b;cursor:pointer;font-size:13px;">삭제</button>
+            </div>
           ` : ''}
         </div>
-        <p class="entry-content">${escapeHtml(entry.content)}</p>
-        <div style="display:flex; gap:8px; margin-top:15px; flex-wrap:wrap;">
-            <button class="reaction-btn" data-type="sprout" style="background:#f1f5f9;border:none;border-radius:20px;padding:5px 10px;cursor:pointer;">🌱 ${rx.sprout}</button>
-            <button class="reaction-btn" data-type="water" style="background:#f1f5f9;border:none;border-radius:20px;padding:5px 10px;cursor:pointer;">💧 ${rx.water}</button>
-            <button class="reaction-btn" data-type="sun" style="background:#f1f5f9;border:none;border-radius:20px;padding:5px 10px;cursor:pointer;">☀️ ${rx.sun}</button>
-            <button class="reaction-btn" data-type="heart" style="background:#f1f5f9;border:none;border-radius:20px;padding:5px 10px;cursor:pointer;">❤️ ${rx.heart}</button>
-            <button class="reply-toggle" style="background:none;border:none;color:#075cc9;font-weight:600;margin-left:auto;cursor:pointer;">💬 답글 달기</button>
+        <p class="entry-content" style="font-size:15px; line-height:1.6; color:#444; margin:10px 0;">${escapeHtml(entry.content)}</p>
+        
+        <div style="display:flex; gap:8px; margin-top:15px; align-items:center;">
+            <button class="reaction-btn" data-type="like" style="background:#f4f6f8; color:#555; border:1px solid #eee; border-radius:20px; padding:6px 12px; font-size:13px; cursor:pointer; transition:all 0.2s;">👍 ${rx.like || 0}</button>
+            <button class="reaction-btn" data-type="dislike" style="background:#f4f6f8; color:#555; border:1px solid #eee; border-radius:20px; padding:6px 12px; font-size:13px; cursor:pointer; transition:all 0.2s;">👎 ${rx.dislike || 0}</button>
+            
+            <button class="reply-toggle" style="background:none; border:none; color:#12a84e; font-weight:600; font-size:14px; margin-left:auto; cursor:pointer;">답글 달기</button>
         </div>
-        <div class="reply-container" style="display:none; margin-top:10px; display:flex; gap:10px;">
-            <input type="text" class="reply-input" placeholder="답글을 입력하세요..." style="flex-grow:1; padding:8px; border:1px solid #ddd; border-radius:6px;">
-            <button class="reply-submit" style="background:#293241; color:#fff; border:none; padding:0 15px; border-radius:6px; cursor:pointer;">등록</button>
+        
+        <div class="reply-container" style="display:none; margin-top:15px; display:flex; gap:10px;">
+            <input type="text" class="reply-input" placeholder="답글을 입력하세요..." style="flex-grow:1; padding:10px; font-size:14px; border:1px solid #ddd; border-radius:8px; outline:none;">
+            <button class="reply-submit" style="background:#12a84e; color:#fff; font-weight:600; border:none; padding:0 16px; border-radius:8px; cursor:pointer;">등록</button>
         </div>
         ${repliesHtml}
       </article>`;
@@ -148,8 +150,8 @@ entryList.addEventListener('click', (event) => {
     const entries = loadEntries();
     const entry = entries.find(e => e.id === id);
     if (entry) {
-      if (!entry.reactions) entry.reactions = { sprout: 0, water: 0, sun: 0, heart: 0 };
-      entry.reactions[type]++;
+      if (!entry.reactions) entry.reactions = { like: 0, dislike: 0 };
+      entry.reactions[type] = (entry.reactions[type] || 0) + 1;
       saveEntries(entries);
       render();
     }
@@ -170,7 +172,7 @@ entryList.addEventListener('click', (event) => {
     const entry = entries.find(e => e.id === id);
     if (entry) {
       if (!entry.replies) entry.replies = [];
-      entry.replies.push({ author: '주인장', content });
+      entry.replies.push({ author: CURRENT_USER, content });
       saveEntries(entries);
       render();
     }
@@ -207,7 +209,7 @@ form.addEventListener('submit', (event) => {
     author: CURRENT_USER,
     content,
     createdAt: Date.now(),
-    reactions: { sprout: 0, water: 0, sun: 0, heart: 0 },
+    reactions: { like: 0, dislike: 0 },
     replies: []
   });
   saveEntries(entries);

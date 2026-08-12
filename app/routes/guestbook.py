@@ -4,7 +4,7 @@ guestbook_bp = Blueprint("guestbook_api", __name__, url_prefix="/api/guestbook")
 
 # 임시 메모리 DB (Mock)
 mock_db = {
-    1: {"id": 1, "content": "식물이 너무 예뻐요!", "author": "지나가던 요정", "reactions": {"sprout": 0, "water": 0, "sun": 0, "heart": 0}, "replies": []}
+    1: {"id": 1, "content": "식물이 너무 예뻐요!", "author": "지나가던 요정", "reactions": {"like": 0, "dislike": 0}, "replies": []}
 }
 next_id = 2
 
@@ -28,7 +28,7 @@ def create_guestbook():
         "id": next_id,
         "content": content,
         "author": author,
-        "reactions": {"sprout": 0, "water": 0, "sun": 0, "heart": 0},
+        "reactions": {"like": 0, "dislike": 0},
         "replies": []
     }
     mock_db[next_id] = new_entry
@@ -96,7 +96,7 @@ def add_reply(entry_id):
         return jsonify(status="error", message="답글 내용이 비어있습니다."), 400
 
     new_reply = {
-        "author": "주인장", 
+        "author": data.get("author", "익명"), 
         "content": content
     }
     
