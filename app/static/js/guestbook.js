@@ -16,7 +16,7 @@ function loadEntries() {
       author: '몬스테라집사',
       content: '식물 덕분에 아침마다 웃게 돼요. 다들 오늘도 좋은 하루 보내세요 🌱',
       createdAt: Date.now() - 1000 * 60 * 40,
-      reactions: { like: 0, dislike: 0 },
+      reactions: { likedBy: [], dislikedBy: [] },
       replies: []
     },
     {
@@ -24,7 +24,7 @@ function loadEntries() {
       author: '다육이엄마',
       content: 'Farmda에서 만난 인연 덕분에 식물 키우는 재미가 두 배가 됐어요. 감사합니다!',
       createdAt: Date.now() - 1000 * 60 * 60 * 5,
-      reactions: { like: 0, dislike: 0 },
+      reactions: { likedBy: [], dislikedBy: [] },
       replies: []
     },
     {
@@ -32,7 +32,7 @@ function loadEntries() {
       author: '초록정원사',
       content: '처음 시작할 땐 막막했는데 다들 응원해주셔서 여기까지 왔네요. 고맙습니다 :)',
       createdAt: Date.now() - 1000 * 60 * 60 * 27,
-      reactions: { like: 0, dislike: 0 },
+      reactions: { likedBy: [], dislikedBy: [] },
       replies: []
     },
   ];
@@ -74,39 +74,54 @@ function render() {
   entryList.innerHTML = entries
     .map(
       (entry) => {
-        const rx = entry.reactions || { like: 0, dislike: 0 };
+        const rx = entry.reactions || { likedBy: [], dislikedBy: [] };
+        // Migration from old like/dislike format if needed
+        if (typeof rx.like === 'number') { rx.likedBy = []; rx.dislikedBy = []; delete rx.like; delete rx.dislike; }
+        
         const rp = entry.replies || [];
         
+        const hasLiked = rx.likedBy.includes(CURRENT_USER);
+        const hasDisliked = rx.dislikedBy.includes(CURRENT_USER);
+
         const repliesHtml = rp.map(r => `
-          <div style="background:#f8f9fa; padding:12px; margin-top:10px; border-radius:8px; border-left:3px solid #dfe3e8; font-size:14px; color:#333;">
-            <b style="color:#555; margin-right:8px;">${escapeHtml(r.author)}</b>
-            <span>${escapeHtml(r.content)}</span>
+          <div style="background:#f8f9fa; padding:12px 16px; margin-top:12px; border-radius:8px; border-left:3px solid #12a84e; font-size:14px; color:#333; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <b style="color:#222; margin-right:8px; display:inline-block; margin-bottom:4px;">${escapeHtml(r.author)}</b>
+            <div style="line-height:1.5;">${escapeHtml(r.content)}</div>
           </div>
         `).join('');
 
-        return `<article class="entry-card" data-id="${escapeHtml(entry.id)}" style="padding:20px; border-radius:12px; border:1px solid #eee; margin-bottom:15px; box-shadow:0 2px 8px rgba(0,0,0,0.02);">
-        <div class="entry-card-meta" style="display:flex; align-items:center; margin-bottom:10px;">
-          <strong class="entry-author" style="font-size:15px; color:#222; margin-right:10px;">${escapeHtml(entry.author)}</strong>
-          <span style="font-size:13px; color:#999;">${timeAgo(entry.createdAt)}</span>
+        return `<article class="entry-card" data-id="${escapeHtml(entry.id)}" style="background:#fff; padding:24px; border-radius:16px; border:1px solid #eaeaea; margin-bottom:20px; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+        <div class="entry-card-meta" style="display:flex; align-items:center; margin-bottom:12px;">
+          <div style="width:36px; height:36px; border-radius:50%; background:#e9ecef; display:flex; align-items:center; justify-content:center; margin-right:12px; font-weight:bold; color:#6c757d;">
+             ${escapeHtml(entry.author).charAt(0)}
+          </div>
+          <strong class="entry-author" style="font-size:16px; color:#212529; margin-right:12px;">${escapeHtml(entry.author)}</strong>
+          <span style="font-size:13px; color:#adb5bd;">${timeAgo(entry.createdAt)}</span>
           ${entry.author === CURRENT_USER ? `
-            <div style="margin-left:auto; display:flex; gap:10px;">
-              <button class="entry-edit" type="button" aria-label="수정" style="border:none;background:none;color:#888;cursor:pointer;font-size:13px;">수정</button>
-              <button class="entry-delete" type="button" aria-label="삭제" style="border:none;background:none;color:#ff6b6b;cursor:pointer;font-size:13px;">삭제</button>
+            <div style="margin-left:auto; display:flex; gap:12px;">
+              <button class="entry-edit" type="button" aria-label="수정" style="border:none;background:none;color:#6c757d;cursor:pointer;font-size:13px;font-weight:600;">수정</button>
+              <button class="entry-delete" type="button" aria-label="삭제" style="border:none;background:none;color:#fa5252;cursor:pointer;font-size:13px;font-weight:600;">삭제</button>
             </div>
           ` : ''}
         </div>
-        <p class="entry-content" style="font-size:15px; line-height:1.6; color:#444; margin:10px 0;">${escapeHtml(entry.content)}</p>
+        <p class="entry-content" style="font-size:15px; line-height:1.7; color:#343a40; margin:16px 0; word-break:break-all;">${escapeHtml(entry.content)}</p>
         
-        <div style="display:flex; gap:8px; margin-top:15px; align-items:center;">
-            <button class="reaction-btn" data-type="like" style="background:#f4f6f8; color:#555; border:1px solid #eee; border-radius:20px; padding:6px 12px; font-size:13px; cursor:pointer; transition:all 0.2s;">👍 ${rx.like || 0}</button>
-            <button class="reaction-btn" data-type="dislike" style="background:#f4f6f8; color:#555; border:1px solid #eee; border-radius:20px; padding:6px 12px; font-size:13px; cursor:pointer; transition:all 0.2s;">👎 ${rx.dislike || 0}</button>
+        <div style="display:flex; gap:10px; margin-top:20px; align-items:center; border-top:1px solid #f1f3f5; padding-top:16px;">
+            <button class="reaction-btn" data-type="like" style="background:${hasLiked ? '#e3f2fd' : '#f8f9fa'}; color:${hasLiked ? '#1971c2' : '#495057'}; border:1px solid ${hasLiked ? '#a5d8ff' : '#dee2e6'}; border-radius:20px; padding:6px 14px; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s;">
+              👍 좋아요 ${rx.likedBy.length > 0 ? rx.likedBy.length : ''}
+            </button>
+            <button class="reaction-btn" data-type="dislike" style="background:${hasDisliked ? '#ffe3e3' : '#f8f9fa'}; color:${hasDisliked ? '#e03131' : '#495057'}; border:1px solid ${hasDisliked ? '#ffc9c9' : '#dee2e6'}; border-radius:20px; padding:6px 14px; font-size:13px; font-weight:600; cursor:pointer; transition:all 0.2s;">
+              👎 싫어요 ${rx.dislikedBy.length > 0 ? rx.dislikedBy.length : ''}
+            </button>
             
-            <button class="reply-toggle" style="background:none; border:none; color:#12a84e; font-weight:600; font-size:14px; margin-left:auto; cursor:pointer;">답글 달기</button>
+            <button class="reply-toggle" style="background:none; border:none; color:#12a84e; font-weight:700; font-size:14px; margin-left:auto; cursor:pointer; display:flex; align-items:center; gap:4px;">
+              <span style="font-size:16px;">💬</span> 답글 달기
+            </button>
         </div>
         
-        <div class="reply-container" style="display:none; margin-top:15px; display:flex; gap:10px;">
-            <input type="text" class="reply-input" placeholder="답글을 입력하세요..." style="flex-grow:1; padding:10px; font-size:14px; border:1px solid #ddd; border-radius:8px; outline:none;">
-            <button class="reply-submit" style="background:#12a84e; color:#fff; font-weight:600; border:none; padding:0 16px; border-radius:8px; cursor:pointer;">등록</button>
+        <div class="reply-container" style="display:none; margin-top:16px; display:flex; gap:10px;">
+            <input type="text" class="reply-input" placeholder="답글을 입력하세요..." style="flex-grow:1; padding:12px 16px; font-size:14px; border:1px solid #ced4da; border-radius:8px; outline:none; background:#f8f9fa; transition:border 0.2s;">
+            <button class="reply-submit" style="background:#12a84e; color:#fff; font-weight:700; border:none; padding:0 20px; border-radius:8px; cursor:pointer; transition:background 0.2s;">등록</button>
         </div>
         ${repliesHtml}
       </article>`;
@@ -150,8 +165,24 @@ entryList.addEventListener('click', (event) => {
     const entries = loadEntries();
     const entry = entries.find(e => e.id === id);
     if (entry) {
-      if (!entry.reactions) entry.reactions = { like: 0, dislike: 0 };
-      entry.reactions[type] = (entry.reactions[type] || 0) + 1;
+      if (!entry.reactions || typeof entry.reactions.like === 'number') {
+        entry.reactions = { likedBy: [], dislikedBy: [] };
+      }
+      
+      const targetArray = type === 'like' ? entry.reactions.likedBy : entry.reactions.dislikedBy;
+      const otherArray = type === 'like' ? entry.reactions.dislikedBy : entry.reactions.likedBy;
+      
+      const index = targetArray.indexOf(CURRENT_USER);
+      if (index > -1) {
+        // 이미 눌렀으면 취소
+        targetArray.splice(index, 1);
+      } else {
+        // 안 눌렀으면 추가하고 반대편 취소
+        targetArray.push(CURRENT_USER);
+        const otherIndex = otherArray.indexOf(CURRENT_USER);
+        if (otherIndex > -1) otherArray.splice(otherIndex, 1);
+      }
+      
       saveEntries(entries);
       render();
     }
@@ -209,7 +240,7 @@ form.addEventListener('submit', (event) => {
     author: CURRENT_USER,
     content,
     createdAt: Date.now(),
-    reactions: { like: 0, dislike: 0 },
+    reactions: { likedBy: [], dislikedBy: [] },
     replies: []
   });
   saveEntries(entries);
