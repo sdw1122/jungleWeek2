@@ -156,6 +156,28 @@ class PlantApiTestCase(unittest.TestCase):
         self.assertEqual(other_detail.status_code, 404)
         self.assertEqual(other_care.status_code, 404)
 
+    def test_completed_plant_keeps_care_actions_enabled(self):
+        plant_id = self._create_plant().get_json()["data"]["plant"]["id"]
+        with self.app.app_context():
+            plant = db.session.get(Plant, plant_id)
+            plant.growth_score = 100
+            plant.status = "GIFT_READY"
+            db.session.commit()
+
+        response = self._post(
+            f"/api/v1/plants/{plant_id}/care",
+            {"actionType": "WATER"},
+        )
+        self.assertEqual(response.status_code, 200)
+        plant_data = response.get_json()["data"]["plant"]
+        self.assertEqual(plant_data["growthScore"], 100)
+        self.assertEqual(plant_data["positiveEnergy"], 5)
+        self.assertEqual(plant_data["status"], "GIFT_READY")
+        with self.app.app_context():
+            log = CareLog.query.order_by(CareLog.id.desc()).first()
+            self.assertEqual(log.growth_delta, 0)
+            self.assertEqual(log.positive_delta, 5)
+
     def test_plant_api_requires_login_and_csrf(self):
         anonymous = self.app.test_client()
         self.assertEqual(anonymous.get("/api/v1/plants").status_code, 401)

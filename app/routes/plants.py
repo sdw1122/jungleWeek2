@@ -3,7 +3,7 @@ from flask_login import current_user, login_required
 from sqlalchemy.exc import IntegrityError
 
 from ..extensions import db
-from ..models import CareLog, Plant, PlantOwnership, PlantSpecies
+from ..models import CareLog, Gift, Plant, PlantOwnership, PlantSpecies
 
 
 plants_bp = Blueprint("plants", __name__, url_prefix="/api/v1/plants")
@@ -140,7 +140,18 @@ def get_plant(plant_id: int):
     if not row:
         return api_error("PLANT_NOT_FOUND", "식물을 찾을 수 없습니다.", 404)
     plant, ownership = row
-    return jsonify(data={"plant": plant.to_dict(ownership)})
+    plant_data = plant.to_dict(ownership)
+    received_gift = None
+    if ownership.gift_id:
+        gift = db.session.get(Gift, ownership.gift_id)
+        if (
+            gift
+            and gift.recipient_user_id == current_user.id
+            and gift.recipient_viewed_at is None
+        ):
+            received_gift = gift.to_dict()
+    plant_data["receivedGift"] = received_gift
+    return jsonify(data={"plant": plant_data})
 
 
 @plants_bp.post("/<int:plant_id>/care")
@@ -161,9 +172,6 @@ def care_for_plant(plant_id: int):
     if not row:
         return api_error("PLANT_NOT_FOUND", "식물을 찾을 수 없습니다.", 404)
     plant, ownership = row
-    if plant.growth_score >= 100:
-        return api_error("PLANT_ALREADY_COMPLETE", "이미 성장을 완료한 식물입니다.", 409)
-
     previous_score = plant.growth_score
     is_negative = action_type == "IGNORE"
     positive_delta = 0 if is_negative else 5
@@ -171,7 +179,7 @@ def care_for_plant(plant_id: int):
     plant.growth_score = min(100, plant.growth_score + 5)
     plant.positive_energy += positive_delta
     plant.negative_energy += negative_delta
-    if plant.growth_score >= 100:
+    if previous_score < 100 and plant.growth_score >= 100:
         plant.status = "GIFT_READY"
 
     db.session.add(

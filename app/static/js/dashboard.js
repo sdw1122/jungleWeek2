@@ -4,11 +4,15 @@ let csrf = '';
 let lastAiEmotion = null;
 
 const messages = document.querySelector('#messages');
+const messageList = document.querySelector('#message-list');
+const loadOlderMessages = document.querySelector('#load-older-messages');
 const stagePlant = document.querySelector('#seed');
 const seedActions = document.querySelector('#seed-actions');
 const chatForm = document.querySelector('#chat-form');
 const chatInput = document.querySelector('#chat-input');
 const actionButtons = document.querySelectorAll('[data-action]');
+const openGiftButton = document.querySelector('#open-gift');
+let nextBeforeMessageId = null;
 const prefixPattern = /^(사랑을 담은|행운의|감사의|건강을 기원하는|싱그러운|우리의|존경의|사랑의)\s*/;
 const seedStyles = {
   '몬스테라': 'monstera', '스투키': 'stucky', '산세베리아': 'sansevieria',
@@ -59,10 +63,57 @@ const replies = {
 const apiActions = { water: 'WATER', sun: 'SUNLIGHT', pet: 'PET', ignore: 'IGNORE' };
 
 function escapeHtml(value) {
-  return value.replace(/[&<>"']/g, character => ({
+  return String(value).replace(/[&<>"']/g, character => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[character]));
 }
+
+function messageMarkup(role, content, speakerNickname = null) {
+  const isUser = role === 'USER';
+  const speaker = isUser && speakerNickname
+    ? `<small class="message-speaker">${escapeHtml(speakerNickname)}</small>`
+    : '';
+  return `<div class="message-row ${isUser ? 'user' : 'plant'}">${speaker}<p${isUser ? ' class="user"' : ''}>${escapeHtml(content)}</p></div>`;
+}
+
+function appendMessage(role, content, speakerNickname = null) {
+  messageList.insertAdjacentHTML('beforeend', messageMarkup(role, content, speakerNickname));
+}
+
+async function loadChatHistory(beforeId = null) {
+  const query = new URLSearchParams({ limit: '50' });
+  if (beforeId) query.set('beforeId', String(beforeId));
+  const previousHeight = messages.scrollHeight;
+  const payload = await apiRequest(`/api/chat/${chosen.id}/messages?${query}`);
+  const historyMessages = payload.data.messages;
+  const markup = historyMessages.map(item => (
+    messageMarkup(item.role, item.content, item.speakerNickname)
+  )).join('');
+
+  if (beforeId) {
+    messageList.insertAdjacentHTML('afterbegin', markup);
+    messages.scrollTop += messages.scrollHeight - previousHeight;
+  } else if (historyMessages.length) {
+    messageList.innerHTML = markup;
+    messages.scrollTop = messages.scrollHeight;
+  } else {
+    messageList.innerHTML = '<p>씨앗이 심어졌습니다. 먼저 정성껏 돌봐주세요!</p>';
+  }
+  nextBeforeMessageId = payload.data.nextBeforeId;
+  loadOlderMessages.hidden = !nextBeforeMessageId;
+}
+
+loadOlderMessages.addEventListener('click', async () => {
+  if (!nextBeforeMessageId || loadOlderMessages.disabled) return;
+  loadOlderMessages.disabled = true;
+  try {
+    await loadChatHistory(nextBeforeMessageId);
+  } catch (error) {
+    appendMessage('PLANT', error.message);
+  } finally {
+    loadOlderMessages.disabled = false;
+  }
+});
 
 async function loadCsrf() {
   const response = await fetch('/api/v1/auth/csrf', { credentials: 'same-origin' });
@@ -122,6 +173,7 @@ function renderGrowth(animate = false) {
 
   seedActions.hidden = false;
   chatForm.hidden = total < 5;
+  openGiftButton.hidden = total < 100;
   if (stagePlant.dataset.visual !== visualKey) {
     stagePlant.dataset.visual = visualKey;
     applyGrowthVisual(stagePlant, seedStyle, stageStyle, isNegative);
@@ -134,17 +186,17 @@ function renderGrowth(animate = false) {
   }
 }
 
-function showCompletion() {
-  if (chosen?.growthScore >= 100 && !completionShown) {
+function showCompletion(previousScore) {
+  if (previousScore < 100 && chosen?.growthScore >= 100 && !completionShown) {
     completionShown = true;
     window.setTimeout(() => {
-      document.querySelector('#growth-modal').hidden = false;
-      document.body.style.overflow = 'hidden';
+      openGiftModal();
     }, 500);
   }
 }
 
 async function care(actionType, note = null, sentiment = 'POSITIVE') {
+  const previousScore = chosen.growthScore;
   const payload = await apiRequest(`/api/v1/plants/${chosen.id}/care`, {
     method: 'POST',
     body: JSON.stringify({ actionType, note, sentiment })
@@ -152,7 +204,7 @@ async function care(actionType, note = null, sentiment = 'POSITIVE') {
   chosen = payload.data.plant;
   lastAiEmotion = null;
   renderGrowth(true);
-  showCompletion();
+  showCompletion(previousScore);
 }
 
 actionButtons.forEach(button => button.addEventListener('click', async () => {
@@ -161,14 +213,14 @@ actionButtons.forEach(button => button.addEventListener('click', async () => {
   const action = button.dataset.action;
   try {
     await care(apiActions[action]);
-    messages.insertAdjacentHTML('beforeend', `<p class="user">${replies[action]}</p>`);
+    appendMessage('USER', replies[action]);
     messages.scrollTop = messages.scrollHeight;
     stagePlant.animate(
       [{ transform: 'scale(.94)' }, { transform: 'scale(1.08)' }, { transform: 'scale(1)' }],
       { duration: 320 }
     );
   } catch (error) {
-    messages.insertAdjacentHTML('beforeend', `<p>${escapeHtml(error.message)}</p>`);
+    appendMessage('PLANT', error.message);
   } finally {
     actionButtons.forEach(item => { item.disabled = false; });
   }
@@ -177,9 +229,9 @@ actionButtons.forEach(button => button.addEventListener('click', async () => {
 chatForm.addEventListener('submit', async event => {
   event.preventDefault();
   const text = chatInput.value.trim();
-  if (!text || !chosen || chatInput.disabled || chosen.growthScore >= 100) return;
+  if (!text || !chosen || chatInput.disabled) return;
 
-  messages.insertAdjacentHTML('beforeend', `<p class="user">${escapeHtml(text)}</p>`);
+  appendMessage('USER', text);
   chatInput.value = '';
   chatInput.disabled = true;
   messages.scrollTop = messages.scrollHeight;
@@ -191,11 +243,10 @@ chatForm.addEventListener('submit', async event => {
     });
     chosen = payload.plant;
     lastAiEmotion = payload.emotion || null;
-    messages.insertAdjacentHTML('beforeend', `<p>${escapeHtml(payload.response)}</p>`);
+    appendMessage('PLANT', payload.response);
     renderGrowth(true);
-    showCompletion();
   } catch (error) {
-    messages.insertAdjacentHTML('beforeend', `<p>${escapeHtml(error.message)}</p>`);
+    appendMessage('PLANT', error.message);
   } finally {
     chatInput.disabled = false;
     chatInput.focus();
@@ -215,12 +266,16 @@ async function loadPlant() {
         location.href = 'plant-select.html';
         return;
       }
-      chosen = payload.data.plants[0];
-      history.replaceState({}, '', `dashboard-v2.html?plantId=${chosen.id}`);
+      const firstPlant = payload.data.plants[0];
+      const detailPayload = await apiRequest(`/api/v1/plants/${firstPlant.id}`);
+      chosen = detailPayload.data.plant;
+      history.replaceState({}, '', `dashboard-v2.html?plantId=${firstPlant.id}`);
     }
     renderGrowth(false);
+    await loadChatHistory();
+    if (chosen.receivedGift) showReceivedGift(chosen.receivedGift);
   } catch (error) {
-    messages.innerHTML = `<p>${escapeHtml(error.message)}</p>`;
+    messageList.innerHTML = `<p>${escapeHtml(error.message)}</p>`;
   }
 }
 
@@ -242,17 +297,25 @@ document.querySelector('#profile-logout').addEventListener('click', async () => 
     await apiRequest('/api/v1/auth/logout', { method: 'POST' });
     location.href = '/login.html';
   } catch (error) {
-    messages.insertAdjacentHTML('beforeend', `<p>${escapeHtml(error.message)}</p>`);
+    appendMessage('PLANT', error.message);
   }
 });
 
 const growthModal = document.querySelector('#growth-modal');
+function openGiftModal() {
+  document.querySelector('#gift-form-view').hidden = false;
+  document.querySelector('#gift-success').hidden = true;
+  giftError.textContent = '';
+  growthModal.hidden = false;
+  document.body.style.overflow = 'hidden';
+}
 function closeGrowthModal() {
   growthModal.hidden = true;
   document.body.style.overflow = '';
 }
+openGiftButton.addEventListener('click', openGiftModal);
 document.querySelector('.modal-later').addEventListener('click', closeGrowthModal);
-document.querySelector('.growth-modal-backdrop').addEventListener('click', closeGrowthModal);
+growthModal.querySelector('.growth-modal-backdrop').addEventListener('click', closeGrowthModal);
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && !growthModal.hidden) closeGrowthModal();
 });
@@ -268,7 +331,7 @@ giftMessage.addEventListener('input', () => {
 giftNickname.addEventListener('input', () => {
   giftError.textContent = '';
 });
-giftForm.addEventListener('submit', event => {
+giftForm.addEventListener('submit', async event => {
   event.preventDefault();
   const nickname = giftNickname.value.trim();
   const message = giftMessage.value.trim();
@@ -277,18 +340,64 @@ giftForm.addEventListener('submit', event => {
     giftNickname.focus();
     return;
   }
+  if (!window.confirm(`${nickname}님에게 이 식물을 선물할까요? 선물하면 소유권이 즉시 이전됩니다.`)) {
+    return;
+  }
   const submitButton = giftForm.querySelector('.gift-submit');
   submitButton.disabled = true;
   submitButton.querySelector('b').textContent = '선물 카드를 만드는 중…';
-  window.setTimeout(() => {
-    document.querySelector('#gift-recipient').textContent = nickname;
+  try {
+    const payload = await apiRequest(`/api/v1/plants/${chosen.id}/gift`, {
+      method: 'POST',
+      body: JSON.stringify({ recipientNickname: nickname, message })
+    });
+    document.querySelector('#gift-recipient').textContent = payload.data.gift.recipient.nickname;
     document.querySelector('#gift-plant-name').textContent = chosen?.name || '식물';
     document.querySelector('#gift-plant-icon').textContent = chosen?.emoji || '🪴';
     document.querySelector('#gift-sent-message').textContent = message;
     document.querySelector('#gift-form-view').hidden = true;
     document.querySelector('#gift-success').hidden = false;
-  }, 450);
+  } catch (error) {
+    giftError.textContent = error.message;
+    submitButton.disabled = false;
+    submitButton.querySelector('b').textContent = '이 식물 선물하기';
+  }
 });
-document.querySelector('.gift-done').addEventListener('click', closeGrowthModal);
+document.querySelector('#gift-success .gift-done').addEventListener('click', () => {
+  location.href = '/my-plants.html';
+});
+
+const receivedGiftModal = document.querySelector('#received-gift-modal');
+const receivedGiftConfirm = document.querySelector('#received-gift-confirm');
+let receivedGift = null;
+
+function showReceivedGift(gift) {
+  receivedGift = gift;
+  document.querySelector('#received-gift-sender').textContent = gift.sender?.nickname || '친구';
+  document.querySelector('#received-gift-plant').textContent = chosen?.name || '식물';
+  document.querySelector('#received-gift-icon').textContent = chosen?.emoji || '🪴';
+  document.querySelector('#received-gift-message').textContent = gift.message || '';
+  document.querySelector('#received-gift-error').textContent = '';
+  receivedGiftModal.hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+
+receivedGiftConfirm.addEventListener('click', async () => {
+  if (!receivedGift || receivedGiftConfirm.disabled) return;
+  receivedGiftConfirm.disabled = true;
+  receivedGiftConfirm.textContent = '확인하는 중…';
+  try {
+    await apiRequest(`/api/v1/gifts/${receivedGift.id}/acknowledge`, { method: 'POST' });
+    chosen.receivedGift = null;
+    receivedGift = null;
+    receivedGiftModal.hidden = true;
+    document.body.style.overflow = '';
+  } catch (error) {
+    document.querySelector('#received-gift-error').textContent = error.message;
+  } finally {
+    receivedGiftConfirm.disabled = false;
+    receivedGiftConfirm.textContent = '선물 확인하기';
+  }
+});
 
 loadPlant();

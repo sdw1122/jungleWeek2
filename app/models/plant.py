@@ -151,13 +151,17 @@ class PlantOwnership(db.Model):
         nullable=False,
     )
     acquisition_type = db.Column(db.String(20), nullable=False)
-    gift_id = db.Column(db.BigInteger().with_variant(db.Integer, "sqlite"))
+    gift_id = db.Column(
+        db.BigInteger().with_variant(db.Integer, "sqlite"),
+        db.ForeignKey("gifts.id", ondelete="RESTRICT"),
+    )
     started_at = db.Column(
         db.DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     ended_at = db.Column(db.DateTime(timezone=True))
 
     plant = db.relationship(Plant)
+    gift = db.relationship("Gift", foreign_keys=[gift_id])
 
 
 class CareLog(db.Model):

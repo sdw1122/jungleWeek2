@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
 
 from ..extensions import db
-from ..models import CareLog, ChatMessage, ChatSession, Plant, PlantOwnership
+from ..models import CareLog, ChatMessage, ChatSession, Plant, PlantOwnership, User
 from ..services.ai_service import analyze_chat
 
 
@@ -23,6 +23,55 @@ def owned_plant(plant_id: int):
             PlantOwnership.ended_at.is_(None),
         )
         .first()
+    )
+
+
+@chat_bp.get("/<int:plant_id>/messages")
+@login_required
+def chat_history(plant_id: int):
+    if not owned_plant(plant_id):
+        return api_error("PLANT_NOT_FOUND", "식물을 찾을 수 없습니다.", 404)
+
+    try:
+        limit = int(request.args.get("limit", 50))
+        before_id = int(request.args["beforeId"]) if "beforeId" in request.args else None
+    except (TypeError, ValueError):
+        return api_error("VALIDATION_ERROR", "조회 조건을 확인해 주세요.", 400)
+    if not 1 <= limit <= 50 or (before_id is not None and before_id < 1):
+        return api_error("VALIDATION_ERROR", "조회 조건을 확인해 주세요.", 400)
+
+    query = (
+        db.session.query(ChatMessage, ChatSession, User)
+        .join(ChatSession, ChatSession.id == ChatMessage.session_id)
+        .join(User, User.id == ChatSession.user_id)
+        .filter(ChatSession.plant_id == plant_id)
+    )
+    if before_id is not None:
+        query = query.filter(ChatMessage.id < before_id)
+    rows = (
+        query.order_by(ChatMessage.id.desc())
+        .limit(limit + 1)
+        .all()
+    )
+    has_more = len(rows) > limit
+    page = rows[:limit]
+    messages = [
+        {
+            "id": message.id,
+            "role": message.role,
+            "content": message.content,
+            "speakerNickname": user.nickname if message.role == "USER" else None,
+            "positiveDelta": message.positive_delta,
+            "negativeDelta": message.negative_delta,
+            "createdAt": message.created_at.isoformat() if message.created_at else None,
+        }
+        for message, session, user in reversed(page)
+    ]
+    return jsonify(
+        data={
+            "messages": messages,
+            "nextBeforeId": page[-1][0].id if has_more and page else None,
+        }
     )
 
 
@@ -65,7 +114,8 @@ def chat():
         db.session.flush()
 
     past_messages = (
-        ChatMessage.query.filter_by(session_id=session.id)
+        ChatMessage.query.join(ChatSession, ChatSession.id == ChatMessage.session_id)
+        .filter(ChatSession.plant_id == plant.id)
         .order_by(ChatMessage.created_at.desc(), ChatMessage.id.desc())
         .limit(10)
         .all()

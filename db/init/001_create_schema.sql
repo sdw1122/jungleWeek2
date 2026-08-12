@@ -68,6 +68,7 @@ CREATE TABLE gifts (
     status VARCHAR(20) NOT NULL DEFAULT 'READY',
     claim_code_hash VARCHAR(255),
     accepted_at TIMESTAMPTZ,
+    recipient_viewed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

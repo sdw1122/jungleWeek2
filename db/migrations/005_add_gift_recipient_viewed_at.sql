@@ -1,0 +1,6 @@
+BEGIN;
+
+ALTER TABLE gifts
+    ADD COLUMN IF NOT EXISTS recipient_viewed_at TIMESTAMPTZ;
+
+COMMIT;
