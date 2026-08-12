@@ -8,4 +8,5 @@ psycopg[binary]
 python-dotenv
 waitress
 
+pytz
 openai

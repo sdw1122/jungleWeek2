@@ -191,7 +191,6 @@ CREATE TABLE diary_media (
 
 CREATE TABLE public_guestbook_entries (
     id BIGSERIAL PRIMARY KEY,
-    plant_id BIGINT NOT NULL REFERENCES plants(id) ON DELETE RESTRICT,
     author_user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
     nickname_snapshot VARCHAR(50) NOT NULL,
     content VARCHAR(500) NOT NULL,
@@ -236,8 +235,8 @@ CREATE INDEX idx_public_diary
     ON diary_entries (diary_at DESC)
     WHERE is_public = TRUE;
 
-CREATE INDEX idx_guestbook_plant_created
-    ON public_guestbook_entries (plant_id, created_at DESC);
+CREATE INDEX idx_guestbook_created
+    ON public_guestbook_entries (created_at DESC);
 
 CREATE INDEX idx_gifts_recipient
     ON gifts (recipient_user_id, gifted_on DESC);

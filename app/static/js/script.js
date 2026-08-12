@@ -145,3 +145,4 @@ thumbnails.forEach(button => button.addEventListener('click', () => {
 }));
 
 loadCsrf().catch(error => showToast(error.message, true));
+

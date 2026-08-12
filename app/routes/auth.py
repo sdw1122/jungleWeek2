@@ -246,3 +246,4 @@ def logout():
 @login_required
 def me():
     return jsonify(data={"user": current_user.to_dict()})
+
