@@ -9,6 +9,7 @@ from .plant import (
     PlantSpecies,
 )
 from .user import User
+from .guestbook import GuestbookEntry, GuestbookReply, GuestbookReaction, GuestbookReplyReaction
 
 __all__ = [
     "CareLog",
@@ -21,4 +22,8 @@ __all__ = [
     "PlantOwnership",
     "PlantSpecies",
     "User",
+    "GuestbookEntry",
+    "GuestbookReply",
+    "GuestbookReaction",
+    "GuestbookReplyReaction",
 ]
