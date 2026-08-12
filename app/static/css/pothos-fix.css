@@ -1,0 +1,15 @@
+/* Pothos: a straight central support with alternating heart leaves; no visible flowers. */
+.seed-pothos.growth-leaf .plant-trunk,.seed-pothos.growth-bud .plant-trunk,.seed-pothos.growth-mature .plant-trunk{left:111px;bottom:50px;width:9px;height:158px;border:0;border-radius:6px;background:linear-gradient(90deg,#24663b,#4e984b 55%,#215b36);transform:none}
+.seed-pothos.growth-leaf .plant-leaf,.seed-pothos.growth-bud .plant-leaf,.seed-pothos.growth-mature .plant-leaf{transform-origin:50% 82%!important}
+.seed-pothos.growth-leaf .leaf-1,.seed-pothos.growth-bud .leaf-1,.seed-pothos.growth-mature .leaf-1{left:60px;top:120px;transform:rotate(22deg)}.seed-pothos.growth-leaf .leaf-2,.seed-pothos.growth-bud .leaf-2,.seed-pothos.growth-mature .leaf-2{right:58px;top:106px;transform:rotate(-22deg)}.seed-pothos.growth-leaf .leaf-3,.seed-pothos.growth-bud .leaf-3,.seed-pothos.growth-mature .leaf-3{left:59px;top:78px;transform:rotate(18deg)}.seed-pothos.growth-leaf .leaf-4,.seed-pothos.growth-bud .leaf-4,.seed-pothos.growth-mature .leaf-4{right:58px;top:63px;transform:rotate(-18deg)}.seed-pothos.growth-leaf .leaf-5,.seed-pothos.growth-bud .leaf-5,.seed-pothos.growth-mature .leaf-5{left:66px;top:36px;transform:rotate(13deg)}.seed-pothos.growth-leaf .leaf-6,.seed-pothos.growth-bud .leaf-6,.seed-pothos.growth-mature .leaf-6{right:64px;top:22px;transform:rotate(-13deg)}.seed-pothos.growth-mature .leaf-7{left:82px;top:1px;transform:rotate(7deg) scale(.9)}.seed-pothos.growth-mature .leaf-8{right:79px;top:-10px;transform:rotate(-7deg) scale(.88)}
+.seed-pothos.growth-bud .plant-bud,.seed-pothos.growth-mature .plant-bud,.seed-pothos.growth-mature .plant-bloom{display:none!important}.seed-pothos.growth-mature .plant-model:after{display:none!important}
+/* Mature vines: a connected Y crown as in the reference and one unbroken trailing vine. */
+.seed-pothos.growth-mature .plant-trunk:before,.seed-pothos.growth-mature .plant-trunk:after{content:"";position:absolute;z-index:1;top:-2px;width:89px;height:77px;border-top:7px solid #277744;background:transparent}
+.seed-pothos.growth-mature .plant-trunk:before{right:2px;border-left:7px solid #277744;border-radius:65px 0 0 0;transform:rotate(25deg);transform-origin:right top}
+.seed-pothos.growth-mature .plant-trunk:after{left:2px;border-right:7px solid #277744;border-radius:0 65px 0 0;transform:rotate(-25deg);transform-origin:left top}
+.seed-pothos.growth-mature .leaf-7{left:18px;top:-32px;transform:rotate(-13deg) scale(.92)}.seed-pothos.growth-mature .leaf-8{right:18px;top:-32px;transform:rotate(13deg) scale(.92)}
+.seed-pothos.growth-mature .plant-pot:after{display:none}
+.mini-seed.seed-pothos.has-model .plant-model{margin:-115px 0 0 -115px;transform:scale(.27)!important}
+
+/* The sansevieria flower stalk belongs behind both leaves and the pot rim. */
+.seed-sansevieria.growth-bud .plant-bud,.seed-sansevieria.growth-mature .plant-bloom{z-index:1!important}.seed-sansevieria.growth-bud .plant-leaf,.seed-sansevieria.growth-mature .plant-leaf{z-index:3}.seed-sansevieria .plant-pot{z-index:6}

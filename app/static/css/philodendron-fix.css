@@ -1,0 +1,4 @@
+/* Philodendron remains foliage-only in the game growth stages. */
+.seed-philodendron.growth-bud .plant-bud,.seed-philodendron.growth-bud .plant-bloom,.seed-philodendron.growth-mature .plant-bud,.seed-philodendron.growth-mature .plant-bloom{display:none!important}
+.seed-philodendron.growth-mature .plant-model:after{display:none!important}
+.mini-seed.seed-philodendron.has-model .plant-model{margin:-115px 0 0 -115px;transform:scale(.27)!important}
