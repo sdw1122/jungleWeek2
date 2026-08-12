@@ -13,7 +13,7 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "development-secret-key")
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URL",
-        "postgresql+psycopg://plant_user:plant_password@localhost:5432/plant_app",
+        "sqlite:///app.db",
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SESSION_COOKIE_HTTPONLY = True

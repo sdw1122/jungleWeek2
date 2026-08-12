@@ -1,48 +1,23 @@
-const STORAGE_KEY = 'farmda_guestbook_entries';
-const CURRENT_USER = '나'; // 현재 로그인한 내 닉네임 (실제 연동 시 세션에서 받아옴)
+let CURRENT_USER = '나';
 
-function loadEntries() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw) {
-    try {
-      return JSON.parse(raw);
-    } catch (err) {
-      /* fall through to reseed */
-    }
+// Load entries via API
+async function loadEntries() {
+  try {
+    const payload = await apiRequest('/api/guestbook/', { method: 'GET' });
+    return payload.data || [];
+  } catch (error) {
+    showToast(error.message, true);
+    return [];
   }
-  const seed = [
-    {
-      id: 'seed-3',
-      author: '나',
-      content: '식물 덕분에 아침마다 웃게 돼요. 다들 오늘도 좋은 하루 보내세요 🌱',
-      createdAt: Date.now() - 1000 * 60 * 40,
-      reactions: { likedBy: [], dislikedBy: [] },
-      replies: []
-    },
-    {
-      id: 'seed-2',
-      author: '다육이엄마',
-      content: 'Farmda에서 만난 인연 덕분에 식물 키우는 재미가 두 배가 됐어요. 감사합니다!',
-      createdAt: Date.now() - 1000 * 60 * 60 * 5,
-      reactions: { likedBy: [], dislikedBy: [] },
-      replies: []
-    },
-    {
-      id: 'seed-1',
-      author: '초록정원사',
-      content: '처음 시작할 땐 막막했는데 다들 응원해주셔서 여기까지 왔네요. 고맙습니다 :)',
-      createdAt: Date.now() - 1000 * 60 * 60 * 27,
-      reactions: { likedBy: [], dislikedBy: [] },
-      replies: []
-    },
-  ];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
-  return seed;
 }
 
-function saveEntries(entries) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-}
+let guestbookEntries = [];
+
+const entryList = document.querySelector('#entry-list');
+const entryCount = document.querySelector('#entry-count');
+const emptyState = document.querySelector('#guestbook-empty');
+const overlay = document.querySelector('#write-overlay');
+const form = document.querySelector('#write-form');
 
 function timeAgo(timestamp) {
   const diff = Math.max(0, Date.now() - timestamp);
@@ -60,14 +35,10 @@ function escapeHtml(str) {
   return str.replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 }
 
-const entryList = document.querySelector('#entry-list');
-const entryCount = document.querySelector('#entry-count');
-const emptyState = document.querySelector('#guestbook-empty');
-const overlay = document.querySelector('#write-overlay');
-const form = document.querySelector('#write-form');
-
-function render() {
-  const entries = loadEntries().slice().sort((a, b) => b.createdAt - a.createdAt);
+async function render() {
+  guestbookEntries = await loadEntries();
+  const entries = guestbookEntries.slice();
+  
   entryCount.textContent = `방명록 ${entries.length}개`;
   emptyState.hidden = entries.length > 0;
 
@@ -75,15 +46,12 @@ function render() {
     .map(
       (entry) => {
         const rx = entry.reactions || { likedBy: [], dislikedBy: [] };
-        // Migration from old like/dislike format if needed
-        if (typeof rx.like === 'number') { rx.likedBy = []; rx.dislikedBy = []; delete rx.like; delete rx.dislike; }
-        
         const rp = entry.replies || [];
         
         const hasLiked = rx.likedBy.includes(CURRENT_USER);
         const hasDisliked = rx.dislikedBy.includes(CURRENT_USER);
 
-        const repliesHtml = rp.map((r, index) => {
+        const repliesHtml = rp.map((r) => {
           const rRx = r.reactions || { likedBy: [], dislikedBy: [] };
           const rHasLiked = rRx.likedBy.includes(CURRENT_USER);
           const rHasDisliked = rRx.dislikedBy.includes(CURRENT_USER);
@@ -95,17 +63,17 @@ function render() {
             </div>
             <span class="reply-content">${escapeHtml(r.content)}</span>
             <div class="reply-actions">
-              <button class="reply-reaction-btn ${rHasLiked ? 'active-like' : ''}" data-type="like" data-reply-index="${index}">
+              <button class="reply-reaction-btn ${rHasLiked ? 'active-like' : ''}" data-type="like" data-reply-id="${r.id}">
                 👍 ${rRx.likedBy.length > 0 ? rRx.likedBy.length : ''}
               </button>
-              <button class="reply-reaction-btn ${rHasDisliked ? 'active-dislike' : ''}" data-type="dislike" data-reply-index="${index}">
+              <button class="reply-reaction-btn ${rHasDisliked ? 'active-dislike' : ''}" data-type="dislike" data-reply-id="${r.id}">
                 👎 ${rRx.dislikedBy.length > 0 ? rRx.dislikedBy.length : ''}
               </button>
             </div>
           </div>
         `}).join('');
 
-        return `<article class="entry-card" data-id="${escapeHtml(entry.id)}">
+        return `<article class="entry-card" data-id="${entry.id}">
         <div class="entry-card-meta">
           <div class="avatar">${escapeHtml(entry.author).charAt(0)}</div>
           <strong class="entry-author">${escapeHtml(entry.author)}</strong>
@@ -153,17 +121,20 @@ function render() {
     .join('');
 }
 
-entryList.addEventListener('click', (event) => {
+entryList.addEventListener('click', async (event) => {
   const card = event.target.closest('.entry-card');
   if (!card) return;
-  const id = card.dataset.id;
+  const id = parseInt(card.dataset.id, 10);
   
   // Delete
   if (event.target.closest('.entry-delete')) {
     if (!confirm('이 방명록을 삭제할까요?')) return;
-    const entries = loadEntries().filter((entry) => entry.id !== id);
-    saveEntries(entries);
-    render();
+    try {
+      await apiRequest(`/api/guestbook/${id}`, { method: 'DELETE' });
+      await render();
+    } catch (err) {
+      showToast(err.message, true);
+    }
   }
   
   // Edit (Show Inline Form)
@@ -189,40 +160,46 @@ entryList.addEventListener('click', (event) => {
   if (event.target.closest('.inline-btn-save')) {
     const newContent = card.querySelector('.inline-edit-textarea').value.trim();
     if (newContent) {
-      const entries = loadEntries();
-      const entry = entries.find(e => e.id === id);
-      if (entry) {
-        entry.content = newContent;
-        saveEntries(entries);
-        render();
+      try {
+        await apiRequest(`/api/guestbook/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ content: newContent })
+        });
+        await render();
+      } catch (err) {
+        showToast(err.message, true);
       }
     }
   }
 
   // Entry Reaction
   if (event.target.closest('.reaction-btn')) {
-    const type = event.target.closest('.reaction-btn').dataset.type;
-    const entries = loadEntries();
-    const entry = entries.find(e => e.id === id);
-    if (entry) {
-      if (!entry.reactions || typeof entry.reactions.like === 'number') {
-        entry.reactions = { likedBy: [], dislikedBy: [] };
-      }
+    const btn = event.target.closest('.reaction-btn');
+    const type = btn.dataset.type;
+    
+    try {
+      const payload = await apiRequest(`/api/guestbook/${id}/reaction`, {
+        method: 'POST',
+        body: JSON.stringify({ type })
+      });
       
-      const targetArray = type === 'like' ? entry.reactions.likedBy : entry.reactions.dislikedBy;
-      const otherArray = type === 'like' ? entry.reactions.dislikedBy : entry.reactions.likedBy;
+      const reactions = payload.data.reactions;
       
-      const index = targetArray.indexOf(CURRENT_USER);
-      if (index > -1) {
-        targetArray.splice(index, 1);
-      } else {
-        targetArray.push(CURRENT_USER);
-        const otherIndex = otherArray.indexOf(CURRENT_USER);
-        if (otherIndex > -1) otherArray.splice(otherIndex, 1);
-      }
+      // Update DOM directly instead of render() to prevent blinking
+      const group = btn.closest('.reaction-group');
+      const likeBtn = group.querySelector('[data-type="like"]');
+      const dislikeBtn = group.querySelector('[data-type="dislike"]');
       
-      saveEntries(entries);
-      render();
+      const likeCount = reactions.likedBy.length;
+      const dislikeCount = reactions.dislikedBy.length;
+      
+      likeBtn.className = `reaction-btn ${reactions.likedBy.includes(CURRENT_USER) ? 'active-like' : ''}`;
+      likeBtn.innerHTML = `👍 좋아요 ${likeCount > 0 ? likeCount : ''}`;
+      
+      dislikeBtn.className = `reaction-btn ${reactions.dislikedBy.includes(CURRENT_USER) ? 'active-dislike' : ''}`;
+      dislikeBtn.innerHTML = `👎 싫어요 ${dislikeCount > 0 ? dislikeCount : ''}`;
+    } catch(err) {
+      if (err.message) showToast(err.message, true);
     }
     return;
   }
@@ -231,28 +208,31 @@ entryList.addEventListener('click', (event) => {
   if (event.target.closest('.reply-reaction-btn')) {
     const btn = event.target.closest('.reply-reaction-btn');
     const type = btn.dataset.type;
-    const replyIndex = parseInt(btn.dataset.replyIndex, 10);
+    const replyId = parseInt(btn.dataset.replyId, 10);
     
-    const entries = loadEntries();
-    const entry = entries.find(e => e.id === id);
-    if (entry && entry.replies && entry.replies[replyIndex]) {
-      const reply = entry.replies[replyIndex];
-      if (!reply.reactions) reply.reactions = { likedBy: [], dislikedBy: [] };
+    try {
+      const payload = await apiRequest(`/api/guestbook/reply/${replyId}/reaction`, {
+        method: 'POST',
+        body: JSON.stringify({ type })
+      });
       
-      const targetArray = type === 'like' ? reply.reactions.likedBy : reply.reactions.dislikedBy;
-      const otherArray = type === 'like' ? reply.reactions.dislikedBy : reply.reactions.likedBy;
+      const reactions = payload.data.reactions;
       
-      const rIdx = targetArray.indexOf(CURRENT_USER);
-      if (rIdx > -1) {
-        targetArray.splice(rIdx, 1);
-      } else {
-        targetArray.push(CURRENT_USER);
-        const otherIndex = otherArray.indexOf(CURRENT_USER);
-        if (otherIndex > -1) otherArray.splice(otherIndex, 1);
-      }
+      // Update DOM directly to prevent blinking
+      const actionsDiv = btn.closest('.reply-actions');
+      const likeBtn = actionsDiv.querySelector('[data-type="like"]');
+      const dislikeBtn = actionsDiv.querySelector('[data-type="dislike"]');
       
-      saveEntries(entries);
-      render();
+      const likeCount = reactions.likedBy.length;
+      const dislikeCount = reactions.dislikedBy.length;
+      
+      likeBtn.className = `reply-reaction-btn ${reactions.likedBy.includes(CURRENT_USER) ? 'active-like' : ''}`;
+      likeBtn.innerHTML = `👍 ${likeCount > 0 ? likeCount : ''}`;
+      
+      dislikeBtn.className = `reply-reaction-btn ${reactions.dislikedBy.includes(CURRENT_USER) ? 'active-dislike' : ''}`;
+      dislikeBtn.innerHTML = `👎 ${dislikeCount > 0 ? dislikeCount : ''}`;
+    } catch(err) {
+      if (err.message) showToast(err.message, true);
     }
     return;
   }
@@ -268,17 +248,14 @@ entryList.addEventListener('click', (event) => {
     const input = card.querySelector('.reply-input');
     const content = input.value.trim();
     if (!content) return;
-    const entries = loadEntries();
-    const entry = entries.find(e => e.id === id);
-    if (entry) {
-      if (!entry.replies) entry.replies = [];
-      entry.replies.push({ 
-        author: CURRENT_USER, 
-        content,
-        reactions: { likedBy: [], dislikedBy: [] }
+    try {
+      await apiRequest(`/api/guestbook/${id}/reply`, {
+        method: 'POST',
+        body: JSON.stringify({ content })
       });
-      saveEntries(entries);
-      render();
+      await render();
+    } catch(err) {
+      showToast(err.message, true);
     }
   }
 });
@@ -303,22 +280,34 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape' && !overlay.hidden) closeModal();
 });
 
-form.addEventListener('submit', (event) => {
+form.addEventListener('submit', async (event) => {
   event.preventDefault();
   const content = document.querySelector('#write-content').value.trim();
   if (!content) return;
-  const entries = loadEntries();
-  entries.push({
-    id: `${Date.now()}`,
-    author: CURRENT_USER,
-    content,
-    createdAt: Date.now(),
-    reactions: { likedBy: [], dislikedBy: [] },
-    replies: []
-  });
-  saveEntries(entries);
-  closeModal();
-  render();
+  
+  try {
+    const btn = form.querySelector('.submit-btn');
+    btn.disabled = true;
+    await apiRequest('/api/guestbook/', {
+      method: 'POST',
+      body: JSON.stringify({ content })
+    });
+    closeModal();
+    await render();
+  } catch (err) {
+    showToast(err.message, true);
+  } finally {
+    const btn = form.querySelector('.submit-btn');
+    btn.disabled = false;
+  }
 });
 
-render();
+// fetch user profile on load to know who CURRENT_USER is
+apiRequest('/api/v1/auth/me', { method: 'GET' })
+  .then(payload => {
+    CURRENT_USER = payload.data.nickname;
+    render();
+  })
+  .catch(() => {
+    render(); // fallback
+  });
